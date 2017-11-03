@@ -5,13 +5,15 @@ const mapw = 0x1234;
 const maph = 0x1234;
 
 const aniframes = 12;
+const allframes = [0,1,2,3,4,5,6,7,8,9,10,11];
 
-const pixsz = 9;
+const pixsz = 15;
 
 // type pixel
 // 32 bit int
 // flags, r, g, b
 const PIX_BLANK = 0x0;
+const BACK_COLOR = "rgb(255, 255, 255";
 const PIX_ACTIVE = 0x08000000;
 const PIX_LOCKED = 0x04000000;
 const PIX_TOP = 0x02000000;
@@ -31,29 +33,37 @@ function PixMap(w, h) {
 	this.h = h;
 	
 	// allocate the map
-	this.map = [];
-	for (let f=0; f<aniframes; f++) {
-		for (let i=0; i<h; i++) {
-			this.map[i] = [];
-			for (let j=0; j<w; j++) {
-				this.map[i][j] = 0x0;
-			}
-		}
+	this.map = new Array(h*w*aniframes);
+}
+
+PixMap.prototype.set = function(x, y, pixel, frames) {
+	xyoff = (y * this.w) + x;
+	for (let f=0; f<frames.length; f++) {
+		this.map[(frames[f] * (this.w*this.h)) + xyoff] = pixel;
 	}
 }
 
 PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame) {
+	console.log("in map.draw");
+	//console.log("drawing map "+ x +","+ y +" "+ w +","+ h);
+	//console.log("From "+ sx +","+ sy);
 	let cy = y;
 	let csy = sy;
+	let cx = 0;
+	let csx = 0;
 	while (cy < y+h) {
-		let cx = x;
-		let csx = sx;
+		cx = x;
+		csx = sx;
 		while (cx < x+w) {
-			px = this.map[frame][cy][cx];
-			if (!(px & PIX_ACTIVE)) {
-				continue;
+			px = this.map[(frame * this.w * this.h) + ((cy % this.h) * this.w) + (cx % this.w)];
+			if ((px === undefined) || !(px & PIX_ACTIVE)) {
+				ctx.fillStyle = BACK_COLOR;
+			} else {
+				// debug
+				//console.log(PIX_COLOR(px));
+				ctx.fillStyle = PIX_COLOR(px);
 			}
-			ctx.fillstyle = PIX_COLOR(px);
+			//console.log(ctx.fillStyle);
 			ctx.fillRect(csx, csy, pixsz, pixsz);
 			csx += pixsz;
 			cx++;
@@ -82,37 +92,112 @@ PixPlayer.prototype.draw = function() {
 
 // type PixGame
 function PixGame(canvas) {
+	console.log("in game");
 	this.map = new PixMap(mapw, maph)
 	this.canvas = canvas;
 	this.ctx = canvas.getContext("2d");
+	this.can_w = this.canvas.width / pixsz;
+	this.can_h = this.canvas.height / pixsz;
+	this.can_w2 = this.can_w / 2;
+	this.can_h2 = this.can_h / 2;
 	
 	this.frame = 0; // counter for animation frames
 
 	this.player = new PixPlayer(0.0, 0.0);
 	this.other_players = [];
+
+	this.selected_x = 0;
+	this.selected_y = 0;
+	this.selected_color = PIX_BLANK;
+	this.selected_frames = allframes;
 }
 
 PixGame.prototype.draw = function() {
+	console.log("in game.draw");
 	// draw the map
 	// get canvas size in blocks
-	let can_w = this.canvas.width / pixsz;
-	let can_h = this.canvas.height / pixsz;
 	// get the coord
-	let left_edge = this.player.x - (can_w/2);
-	let top_edge = this.player.y - (can_h/2);
+	let left_edge = this.player.x - (this.can_w2);
+	let top_edge = this.player.y - (this.can_h2);
 	// account for negatives, then round down
-	left_edge = Math.floor((left_edge + this.map.w) % this.map.w);
-	top_edge = Math.floor((top_edge + this.map.h) % this.map.h);
-	// draw the map
-	this.map.draw(this.ctx, 0, 0, left_edge, top_edge, can_w, can_h, this.frame);
+	left_edge = ((left_edge + this.map.w) % this.map.w);
+	top_edge = ((top_edge + this.map.h) % this.map.h);
 
+	// get our edge offset pieces
+	let left_off = (left_edge % 1) * pixsz;
+	let top_off = (top_edge % 1) * pixsz;
+	console.log(left_off, top_off);
+	
+	// floor it for indicies 
+	left_edge = Math.floor(left_edge);
+	top_edge = Math.floor(top_edge);
+	
+	// draw the map
+	this.map.draw(this.ctx, -left_off, -top_off, left_edge, top_edge, this.can_w, this.can_h, this.frame);
+	
+	// draw selected pixel cursor
+	if (PIX_ACTIVE & this.selected_color) {
+		this.ctx.fillStyle = PIX_COLOR(this.selected_color);
+		let can_cord = this.px2can(this.selected_x, this.selected_y);
+		this.ctx.fillRect(can_cord.x, can_cord.y, pixsz, pixsz);
+	}
+	
 	// draw players
 	// draw map top pixels
+	console.log("out game.draw");
 }
 
 PixGame.prototype.color = function(x, y, pixel, frames) {
 	// change map pixel
-	for (let f=0; f<frames.length; f++) {
-		this.map.map[frames[f]][y][x] = pixel;
+	this.map.set(x, y, pixel, frames);
+}
+
+PixGame.prototype.colorSel = function(frames) {
+	// change map pixel
+	this.map.set(this.selected_x, this.selected_y, this.selected_color, this.selected_frames);
+}
+
+PixGame.prototype.resetCan = function() {
+	this.can_w = this.canvas.width / pixsz;
+	this.can_h = this.canvas.height / pixsz;
+	this.can_w2 = this.can_w / 2;
+	this.can_h2 = this.can_h / 2;
+}
+
+PixGame.prototype.setMouse = function(cord) {
+	let dirty = false;
+	if (this.selected_x != Math.floor(cord.y) || this.selected_y != Math.floor(cord.y)) {
+		dirty = true;
 	}
+
+	this.selected_x = Math.floor(cord.x);
+	this.selected_y = Math.floor(cord.y);
+	
+	return dirty;
+}
+
+PixGame.prototype.can2px = function(canx, cany) {
+	let cord = {};
+	cord.x = ((canx / pixsz) + (this.player.x - this.can_w2) + this.map.w) % this.map.w;
+	cord.y = ((cany / pixsz) + (this.player.y - this.can_h2) + this.map.h) % this.map.h;
+	return cord;
+}
+
+PixGame.prototype.px2can = function(pxx, pxy) {
+	let can_cord = {};
+	// px dist from player to select
+	dpx = pxx - this.player.x;
+	ndpx = pxx - (this.player.x + this.map.w);
+
+	dpy = pxy - this.player.y;
+	ndpy = pxy - (this.player.x + this.map.h);
+
+	dpx = (Math.abs(dpx) < Math.abs(ndpx)) ? dpx : ndpx;
+	dpy = (Math.abs(dpy) < Math.abs(ndpy)) ? dpy : ndpy;
+
+	// canvas x = middle + (dpx * pixsz);
+	can_cord.x = (dpx + this.can_w2) * pixsz;
+	can_cord.y = (dpy + this.can_h2) * pixsz;
+	
+	return can_cord;
 }
