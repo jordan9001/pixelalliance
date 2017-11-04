@@ -1,0 +1,10 @@
+Order of todo:
+    - Right mouse erase
+    - animation frames
+    - player move
+    - draw player
+    - collision
+
+    - server backbone
+    - message types
+    - ...

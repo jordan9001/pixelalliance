@@ -43,7 +43,11 @@ window.requestAnimationFrame(do_update);
 console.log("Done");
 
 // register contols
+// wasd/arrows - movement
+// lmb - draw
+// rmb - erase
 let mouse_down = false;
+let right_down = false;
 canvas.addEventListener('mousemove', function(evt) {
 	let rect = canvas.getBoundingClientRect();
 	let canx = evt.clientX - rect.left;
