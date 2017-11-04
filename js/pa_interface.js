@@ -61,8 +61,53 @@ canvas.addEventListener('mousedown', function(evt) {
 	mouse_down = true;
 	game.colorSel();
 }, false);
+
 canvas.addEventListener('mouseup', function(evt) {
 	mouse_down = false;
+}, false);
+
+
+let wdown = false;
+const wkc = 87;
+let sdown = false;
+const skc = 83;
+let ddown = false;
+const dkc = 68;
+let adown = false;
+const akc = 65;
+
+canvas.addEventListener('keydown', function(evt) {
+	switch (evt.keyCode) {
+	case wkc:
+		wdown = true;
+		break;
+	case skc:
+		sdown = true;
+		break;
+	case dkc:
+		ddown = true;
+		break;
+	case akc:
+		adown = true;
+		break;
+	}
+}, false);
+
+canvas.addEventListener('keyup', function(evt) {
+	switch (evt.keyCode) {
+	case wkc:
+		wdown = false;
+		break;
+	case skc:
+		sdown = false;
+		break;
+	case dkc:
+		ddown = false;
+		break;
+	case akc:
+		adown = false;
+		break;
+	}
 }, false);
 
 function pick_color(hex, hsv, rgb) {
