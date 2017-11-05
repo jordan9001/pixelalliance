@@ -69,7 +69,7 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame) {
 				ctx.fillStyle = PIX_COLOR(px);
 			}
 			//console.log(ctx.fillStyle);
-			ctx.fillRect(csx-0.5, csy-0.5, pixsz+0.9, pixsz+0.9);
+			ctx.fillRect(csx-0.6, csy-0.6, pixsz+0.6, pixsz+0.6);
 			csx += pixsz;
 			cx++;
 		}
@@ -119,6 +119,8 @@ function PixGame(canvas) {
 	this.selected_y = 0;
 	this.selected_color = DEF_COLOR;
 	this.selected_frames = allframes;
+
+	this.pensz = 1;
 }
 
 PixGame.prototype.draw = function() {
@@ -145,8 +147,9 @@ PixGame.prototype.draw = function() {
 	// draw selected pixel cursor
 	if (PIX_ACTIVE & this.selected_color) {
 		this.ctx.fillStyle = PIX_COLOR(this.selected_color);
-		let can_cord = this.px2can(this.selected_x, this.selected_y);
-		this.ctx.fillRect(can_cord.x, can_cord.y, pixsz, pixsz);
+		let penoff = Math.floor(this.pensz/2);
+		let can_cord = this.px2can(this.selected_x - penoff, this.selected_y - penoff);
+		this.ctx.fillRect(can_cord.x, can_cord.y, pixsz * this.pensz, pixsz * this.pensz);
 	}
 	
 	// draw players
@@ -165,15 +168,26 @@ PixGame.prototype.color = function(x, y, pixel, frames) {
 
 PixGame.prototype.colorSel = function(erase=false) {
 	// change map pixel
-	this.map.set(this.selected_x, this.selected_y, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
+	// based on brush size;
+	let dy;
+	let dx;
+	let fy;
+	let fx;
+	let penoff = Math.floor(this.pensz/2);
+	for (dy=0; dy<this.pensz; dy++) {
+		for (dx=0; dx<this.pensz; dx++) {
+			fx = this.selected_x + dx - penoff;
+			fy = this.selected_y + dy - penoff;
+			fx = (fx + this.map.w) % this.map.w;
+			fy = (fy + this.map.h) % this.map.h;
+			this.map.set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
+		}
+	}
+	console.log(this.selected_frames);
 }
 
 PixGame.prototype.getColorSel = function() {
-	let fr = 0;
-	if (this.selected_frames.length > 0) {
-		fr = this.selected_frames[0];
-	}
-	return this.map.get(this.selected_x, this.selected_y, fr);
+	return this.map.get(this.selected_x, this.selected_y, game.frame);
 }
 
 PixGame.prototype.resetCan = function() {

@@ -36,11 +36,19 @@
 						<button id="fselb" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
 					</div>
 					<div class="row">
-						<div id="aniframe" class="col m1">
-							0
+						<div class="col f6">
+							<input id="aniframe" class="_full-width" oninput="change_frame(this.value)" type="number" min="1" max="12" value="1"/>
 						</div>
-						<div class="col m3">
-							<button id="toggle_animation" onclick="toggle_animation(this)" class="_small _active">Pause</button>
+						<div class="col f6">
+							<button id="toggle_animation" onclick="toggle_animation(this)" class="_active _full-width">Pause</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col f6">
+							<input id="brushsz" class="_full-width" oninput="change_brushsz(this.value)" type="number" min="1" max="18" value="1"/>
+						</div>
+						<div class="col f6">
+							<label for="brushsz">Brush Size</label>
 						</div>
 					</div>
 				</div>

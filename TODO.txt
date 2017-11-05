@@ -1,4 +1,5 @@
 Order of todo:
+    - brush size
     - player move
     - edit/draw player
     - collision

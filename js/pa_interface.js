@@ -1,7 +1,7 @@
 // This file contains UI contol and such, and runs the game code
 
 // some important constants
-const ms_per_frame = 500;
+const ms_per_frame = 390;
 const COLOR_NOT_SELECTED = "#000000";
 const COLOR_SELECTED = "#003399";
 
@@ -75,7 +75,6 @@ function toggle_frame(framebtn) {
 		game.selected_frames.splice(i, 1);
 		framebtn.style.backgroundColor = COLOR_NOT_SELECTED;
 	}
-	console.log(game.selected_frames);
 }
 
 let do_animation = true;
@@ -85,8 +84,18 @@ function toggle_animation(btnel) {
 	if (do_animation) {
 		btnel.innerText = "pause";
 	} else {
-		btnel.innerText = "animate"
+		btnel.innerText = "play";
 	}
+}
+
+function change_frame(val) {
+	game.frame = val-1;
+	dirty_draw = true;
+}
+
+function change_brushsz(val) {
+	game.pensz = val;
+	dirty_draw = true;
 }
 
 let dirty_draw = false;
@@ -96,7 +105,7 @@ function do_update(ts) {
 	//console.time("update");
 	if (do_animation && frame_timer < ts) {
 		frame_timer = ts + ms_per_frame; // schedule next tick
-		curframe.innerText = game.anitick(); // go forward a frame
+		curframe.value = game.anitick() + 1; // go forward a frame
 		dirty_draw = true;
 	}
 	if (dirty_draw) {
