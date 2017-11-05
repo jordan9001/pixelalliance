@@ -22,9 +22,9 @@ let game = new PixGame(canvas);
 
 // start draw loop
 function do_update(ts) {
-	console.time("draw");
+	//console.time("draw");
 	game.draw();
-	console.timeEnd("draw");
+	//console.timeEnd("draw");
 }
 
 // listen for canvas resize
@@ -54,44 +54,70 @@ canvas.addEventListener('mousemove', function(evt) {
 	let cany = evt.clientY - rect.top;
 
 	if (game.setMouse(game.can2px(canx, cany))) {
-		if (mouse_down) {
+		if (right_down) {
+			game.colorSel(true);
+		} else if (mouse_down) {
 			game.colorSel();
 		}
 		window.requestAnimationFrame(do_update);
 	}
 }, false);
-
+ 
 canvas.addEventListener('mousedown', function(evt) {
-	mouse_down = true;
-	game.colorSel();
+	if (evt.button == 0) {
+		mouse_down = true;
+		game.colorSel();
+	} else if (evt.button == 2) {
+		right_down = true;
+		game.colorSel(true)
+	}
+	window.requestAnimationFrame(do_update);
 }, false);
 
 canvas.addEventListener('mouseup', function(evt) {
-	mouse_down = false;
+	if (evt.button == 0) {
+		mouse_down = false;
+	} else if (evt.button == 2) {
+		right_down = false;
+	}
 }, false);
+
+canvas.addEventListener('contextmenu', function(evt) {
+	console.log("context menu");
+	evt.preventDefault();
+	return false; // disable context menu
+});
 
 
 let wdown = false;
 const wkc = 87;
+const upkc = 38;
 let sdown = false;
 const skc = 83;
+const dnkc = 40
 let ddown = false;
 const dkc = 68;
+const rikc = 39;
 let adown = false;
 const akc = 65;
+const lekc = 37;
 
 canvas.addEventListener('keydown', function(evt) {
 	switch (evt.keyCode) {
 	case wkc:
+	case upkc:
 		wdown = true;
 		break;
 	case skc:
+	case dnkc:
 		sdown = true;
 		break;
 	case dkc:
+	case rikc:
 		ddown = true;
 		break;
 	case akc:
+	case lekc:
 		adown = true;
 		break;
 	}
@@ -100,15 +126,19 @@ canvas.addEventListener('keydown', function(evt) {
 canvas.addEventListener('keyup', function(evt) {
 	switch (evt.keyCode) {
 	case wkc:
+	case upkc:
 		wdown = false;
 		break;
 	case skc:
+	case dnkc:
 		sdown = false;
 		break;
 	case dkc:
+	case rikc:
 		ddown = false;
 		break;
 	case akc:
+	case lekc:
 		adown = false;
 		break;
 	}

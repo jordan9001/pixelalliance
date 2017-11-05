@@ -44,7 +44,6 @@ PixMap.prototype.set = function(x, y, pixel, frames) {
 }
 
 PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame) {
-	console.log("in map.draw");
 	//console.log("drawing map "+ x +","+ y +" "+ w +","+ h);
 	//console.log("From "+ sx +","+ sy);
 	let cy = y;
@@ -84,6 +83,11 @@ function PixPlayer(x, y) {
 	this.right_map;
 	this.down_map;
 	this.left_map;
+
+	this.mov_up_map;
+	this.mov_right_map;
+	this.mov_down_map;
+	this.mov_left_map;
 }
 
 PixPlayer.prototype.draw = function() {
@@ -92,7 +96,6 @@ PixPlayer.prototype.draw = function() {
 
 // type PixGame
 function PixGame(canvas) {
-	console.log("in game");
 	this.map = new PixMap(mapw, maph)
 	this.canvas = canvas;
 	this.ctx = canvas.getContext("2d");
@@ -113,7 +116,6 @@ function PixGame(canvas) {
 }
 
 PixGame.prototype.draw = function() {
-	console.log("in game.draw");
 	// draw the map
 	// get canvas size in blocks
 	// get the coord
@@ -126,7 +128,6 @@ PixGame.prototype.draw = function() {
 	// get our edge offset pieces
 	let left_off = (left_edge % 1) * pixsz;
 	let top_off = (top_edge % 1) * pixsz;
-	console.log(left_off, top_off);
 	
 	// floor it for indicies 
 	left_edge = Math.floor(left_edge);
@@ -144,7 +145,6 @@ PixGame.prototype.draw = function() {
 	
 	// draw players
 	// draw map top pixels
-	console.log("out game.draw");
 }
 
 PixGame.prototype.color = function(x, y, pixel, frames) {
@@ -152,9 +152,9 @@ PixGame.prototype.color = function(x, y, pixel, frames) {
 	this.map.set(x, y, pixel, frames);
 }
 
-PixGame.prototype.colorSel = function(frames) {
+PixGame.prototype.colorSel = function(erase=false) {
 	// change map pixel
-	this.map.set(this.selected_x, this.selected_y, this.selected_color, this.selected_frames);
+	this.map.set(this.selected_x, this.selected_y, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
 }
 
 PixGame.prototype.resetCan = function() {
