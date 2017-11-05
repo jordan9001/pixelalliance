@@ -1,7 +1,6 @@
 Order of todo:
-    - animation frames
     - player move
-    - draw player
+    - edit/draw player
     - collision
 
     - server backbone

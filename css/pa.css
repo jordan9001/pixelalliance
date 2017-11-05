@@ -38,7 +38,8 @@ canvas {
 	padding: 9px;
 	right: 0;
 	top: 0;
-	width: 18%;
+	width: 300px;
+	display: block;
 
 	z-index: 1;
 }
@@ -54,3 +55,13 @@ canvas {
 	background-color: #000000;
 }
 
+#colorgroup {
+	background-color: #ff0000;
+}
+
+.frame_sel {
+	width: 18px;
+	padding: 0px;
+	margin: 0px;
+	background-color: #003399;
+}

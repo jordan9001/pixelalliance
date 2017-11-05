@@ -17,6 +17,31 @@
 					<div id="colorgroup" class="row">
 						<div id="colorpicker" class="col f9"></div>
 						<div id="colorslider" class="col f3"></div>
+						<input id="rinp" class="col f4" oninput="get_color()" type="number" min="0" max="255" value="255"/>
+						<input id="ginp" class="col f4" oninput="get_color()" type="number" min="0" max="255" value="0"/>
+						<input id="binp" class="col f4" oninput="get_color()" type="number" min="0" max="255" value="0"/>
+					</div>
+					<div id="framegroup" class="row">
+						<button id="fsel0" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel1" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel2" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel3" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel4" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel5" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel6" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel7" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel8" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsel9" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fsela" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+						<button id="fselb" onclick="toggle_frame(this)" class="_box _xsmall frame_sel"/>
+					</div>
+					<div class="row">
+						<div id="aniframe" class="col m1">
+							0
+						</div>
+						<div class="col m3">
+							<button id="toggle_animation" onclick="toggle_animation(this)" class="_small _active">Pause</button>
+						</div>
 					</div>
 				</div>
 			</div>
