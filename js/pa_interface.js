@@ -1,9 +1,17 @@
 // This file contains UI contol and such, and runs the game code
 
 // some important constants
-const ms_per_frame = 390;
+const ms_per_frame = 330;
 const COLOR_NOT_SELECTED = "#000000";
 const COLOR_SELECTED = "#003399";
+const wkc = 87;
+const upkc = 38;
+const skc = 83;
+const dnkc = 40
+const dkc = 68;
+const rikc = 39;
+const akc = 65;
+const lekc = 37;
 
 // important elements
 let rcontrol = document.getElementById("rightctr"); 
@@ -15,6 +23,16 @@ let cgroup = document.getElementById('colorgroup');
 let rpicker = document.getElementById("rinp");
 let gpicker = document.getElementById("ginp");
 let bpicker = document.getElementById("binp");
+let brushszinp = document.getElementById("brushsz");
+
+// important state vars
+let dirty_draw = false;
+let mouse_down = false;
+let right_down = false;
+let wdown = false;
+let sdown = false;
+let ddown = false;
+let adown = false;
 
 // get a game instance
 console.log("Creating game");
@@ -80,7 +98,6 @@ function toggle_frame(framebtn) {
 let do_animation = true;
 function toggle_animation(btnel) {
 	do_animation = !do_animation;
-	console.log(btnel);
 	if (do_animation) {
 		btnel.innerText = "pause";
 	} else {
@@ -98,7 +115,6 @@ function change_brushsz(val) {
 	dirty_draw = true;
 }
 
-let dirty_draw = false;
 let frame_timer = 0;
 // start draw loop
 function do_update(ts) {
@@ -108,6 +124,27 @@ function do_update(ts) {
 		curframe.value = game.anitick() + 1; // go forward a frame
 		dirty_draw = true;
 	}
+	// move stuff
+	let moved = false;
+	if (wdown) {
+		game.player.move(move_up);
+		moved = true;
+	} else if (sdown) {
+		game.player.move(move_down);
+		moved = true;
+	}
+	if (ddown) {
+		game.player.move(move_right);
+		moved = true;
+	} else if (adown) {
+		game.player.move(move_left);
+		moved = true;
+	}
+	if (moved) {
+		dirty_draw = true;
+	}
+
+	// draw it
 	if (dirty_draw) {
 		dirty_draw = false;
 		game.draw();
@@ -125,6 +162,7 @@ function canvas_resize() {
 	game.resetCan();
 	dirty_draw = true;
 };
+
 window.addEventListener('resize', canvas_resize, false);
 canvas_resize();
 
@@ -132,8 +170,6 @@ canvas_resize();
 // wasd/arrows - movement
 // lmb - draw
 // rmb - erase
-let mouse_down = false;
-let right_down = false;
 canvas.addEventListener('mousemove', function(evt) {
 	let rect = canvas.getBoundingClientRect();
 	let canx = evt.clientX - rect.left;
@@ -178,26 +214,25 @@ canvas.addEventListener('mouseup', function(evt) {
 	}
 }, false);
 
+canvas.addEventListener('wheel', function(evt) {
+	var direction = (evt.detail<0 || evt.wheelDelta>0) ? 1 : -1;
+	game.pensz += direction;
+	if (game.pensz < 1) {
+		game.pensz = 1;
+	} else if (game.pensz > 18) {
+		game.pensz = 18;
+	}
+	brushszinp.value = game.pensz;
+	dirty_draw = true;
+});
+
 canvas.addEventListener('contextmenu', function(evt) {
 	evt.preventDefault();
 	return false; // disable context menu
 });
 
-
-let wdown = false;
-const wkc = 87;
-const upkc = 38;
-let sdown = false;
-const skc = 83;
-const dnkc = 40
-let ddown = false;
-const dkc = 68;
-const rikc = 39;
-let adown = false;
-const akc = 65;
-const lekc = 37;
-
-canvas.addEventListener('keydown', function(evt) {
+document.addEventListener('keydown', function(evt) {
+	console.log("dwn");
 	switch (evt.keyCode) {
 	case wkc:
 	case upkc:
@@ -218,7 +253,8 @@ canvas.addEventListener('keydown', function(evt) {
 	}
 }, false);
 
-canvas.addEventListener('keyup', function(evt) {
+document.addEventListener('keyup', function(evt) {
+	console.log("up");
 	switch (evt.keyCode) {
 	case wkc:
 	case upkc:

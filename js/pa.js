@@ -7,7 +7,7 @@ const maph = 0x1234;
 const aniframes = 12;
 const allframes = [0,1,2,3,4,5,6,7,8,9,10,11];
 
-const pixsz = 15;
+const pixsz = 12;
 
 // type pixel
 // 32 bit int
@@ -79,11 +79,17 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame) {
 }
 
 // type PixPlayer
+const move_up = 0;
+const move_right = 1;
+const move_down = 2;
+const move_left = 3;
+const move_amount = 0.50;
+
 function PixPlayer(x, y) {
 	this.x = x; // floating point position values
 	this.y = y;
 
-	this.last_dir; // direction to draw
+	this.last_dir = move_down; // direction to draw
 
 	this.up_map;
 	this.right_map;
@@ -98,6 +104,25 @@ function PixPlayer(x, y) {
 
 PixPlayer.prototype.draw = function() {
 
+}
+
+PixPlayer.prototype.move = function(dir) {
+	switch (dir) {
+	case move_up:
+		this.y -= move_amount;
+		break;
+	case move_right:
+		this.x += move_amount;
+		break;
+	case move_down:
+		this.y += move_amount;
+		break;
+	case move_left:
+		this.x -= move_amount;
+		break;
+	}
+	this.last_dir = dir;
+	console.log("move", dir);
 }
 
 // type PixGame
@@ -183,11 +208,14 @@ PixGame.prototype.colorSel = function(erase=false) {
 			this.map.set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
 		}
 	}
-	console.log(this.selected_frames);
 }
 
 PixGame.prototype.getColorSel = function() {
-	return this.map.get(this.selected_x, this.selected_y, game.frame);
+	let c = this.map.get(this.selected_x, this.selected_y, game.frame);
+	if (!(c & PIX_ACTIVE)) {
+		c = BACK_COLOR;
+	}
+	return c;
 }
 
 PixGame.prototype.resetCan = function() {
@@ -223,7 +251,7 @@ PixGame.prototype.px2can = function(pxx, pxy) {
 	ndpx = pxx - (this.player.x + this.map.w);
 
 	dpy = pxy - this.player.y;
-	ndpy = pxy - (this.player.x + this.map.h);
+	ndpy = pxy - (this.player.y + this.map.h);
 
 	dpx = (Math.abs(dpx) < Math.abs(ndpx)) ? dpx : ndpx;
 	dpy = (Math.abs(dpy) < Math.abs(ndpy)) ? dpy : ndpy;

@@ -49,7 +49,7 @@ canvas {
 }
 
 #rightctr {
-	padding: 9px;
+	padding: 6px;
 	padding-top: -10px;
 	width: 100%;
 	background-color: #000000;
@@ -59,9 +59,21 @@ canvas {
 	background-color: #ff0000;
 }
 
-.frame_sel {
-	width: 18px;
+#framegroup {
 	padding: 0px;
 	margin: 0px;
+	width: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	text-align: center;
+}
+
+.frame_sel {
+	color: #cccccc;
+	width: 18px;
+	height: 18px;
+	padding: 0px;
+	margin-left: auto;
+	margin-right: auto;
 	background-color: #003399;
 }
