@@ -1,7 +1,9 @@
 Order of todo:
     - edit/draw player
+        - Edit player button
+	- Drop down to choose state to edit
+        - draw player
     - collision
-
     - server backbone
     - message types
     - ...

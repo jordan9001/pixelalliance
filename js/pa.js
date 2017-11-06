@@ -69,7 +69,7 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame) {
 				ctx.fillStyle = PIX_COLOR(px);
 			}
 			//console.log(ctx.fillStyle);
-			ctx.fillRect(csx-0.6, csy-0.6, pixsz+0.6, pixsz+0.6);
+			ctx.fillRect(csx-0.6, csy-0.6, pixsz+0.6, pixsz+0.6); // the 0.6 helps reduce ghosting
 			csx += pixsz;
 			cx++;
 		}
@@ -85,25 +85,65 @@ const move_down = 2;
 const move_left = 3;
 const move_amount = 0.50;
 
+const max_player_w = 9;
+const max_player_h = 15;
+
 function PixPlayer(x, y) {
 	this.x = x; // floating point position values
 	this.y = y;
 
 	this.last_dir = move_down; // direction to draw
+	this.moving = false; // state to draw
 
-	this.up_map;
-	this.right_map;
-	this.down_map;
-	this.left_map;
+	this.up_map = new PixMap(max_player_w, max_player_h);
+	this.right_map = new PixMap(max_player_w, max_player_h);
+	this.down_map = new PixMap(max_player_w, max_player_h);
+	this.left_map = new PixMap(max_player_w, max_player_h);
 
-	this.mov_up_map;
-	this.mov_right_map;
-	this.mov_down_map;
-	this.mov_left_map;
+	this.mov_up_map = new PixMap(max_player_w, max_player_h);
+	this.mov_right_map = new PixMap(max_player_w, max_player_h);
+	this.mov_down_map = new PixMap(max_player_w, max_player_h);
+	this.mov_left_map = new PixMap(max_player_w, max_player_h);
 }
 
-PixPlayer.prototype.draw = function() {
+PixPlayer.prototype.draw = function(ctx, canx, cany, frame) {
+	let map;
 
+	switch (this.last_dir) {
+	case move_up:
+		if (this.moving) {
+			map = this.mov_up_map;
+		} else {
+			map = this.up_map;
+		}
+		break;
+	case move_right:
+		if (this.moving) {
+			map = this.mov_up_map;
+		} else {
+			map = this.up_map;
+		}
+		break;
+	case move_down:
+		if (this.moving) {
+			map = this.mov_up_map;
+		} else {
+			map = this.up_map;
+		}
+		break;
+	case move_left:
+		if (this.moving) {
+			map = this.mov_up_map;
+		} else {
+			map = this.up_map;
+		}
+		break;
+	}
+
+	let canx_left = canx - ((map.w / 2) * pixsz);
+	let cany_top = cany - ((map.h / 2) * pixsz);
+
+	map.draw(ctx, canx_left, cany_top, 0, 0, map.w, map.h, frame);
 }
 
 PixPlayer.prototype.move = function(dir) {
@@ -122,7 +162,6 @@ PixPlayer.prototype.move = function(dir) {
 		break;
 	}
 	this.last_dir = dir;
-	console.log("move", dir);
 }
 
 // type PixGame
@@ -177,7 +216,13 @@ PixGame.prototype.draw = function() {
 		this.ctx.fillRect(can_cord.x, can_cord.y, pixsz * this.pensz, pixsz * this.pensz);
 	}
 	
-	// draw players
+	// draw main player
+	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_w2 * pixsz, this.frame);
+
+	// draw other players
+	// get the canvas coordinates for the player coordinates
+	let can_px;
+	let can_py;
 	// draw map top pixels
 }
 
