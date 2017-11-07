@@ -147,21 +147,34 @@ PixPlayer.prototype.draw = function(ctx, canx, cany, frame) {
 }
 
 PixPlayer.prototype.move = function(dir) {
+	let nexty;
+	let nextx;
+
 	switch (dir) {
 	case move_up:
-		this.y -= move_amount;
+		nexty = this.y - move_amount;
 		break;
 	case move_right:
-		this.x += move_amount;
+		nextx = this.x + move_amount;
 		break;
 	case move_down:
-		this.y += move_amount;
+		nexty = this.y + move_amount;
 		break;
 	case move_left:
-		this.x -= move_amount;
+		nextx -= this.x - move_amount;
 		break;
 	}
 	this.last_dir = dir;
+
+
+	// first check collision
+	if (Math.floor(this.x) != Math.floor(nextx) || Math.floor(this.y) != Math.floor(nexty)) {
+		// loop through the current player frame and cooresponding map grid, check if 2 collision pieces overlap
+		//TODO
+	}
+	
+	this.x = nextx;
+	this.y = nexty;
 }
 
 // type PixGame

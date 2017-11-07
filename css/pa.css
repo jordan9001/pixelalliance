@@ -77,3 +77,28 @@ canvas {
 	margin-right: auto;
 	background-color: #003399;
 }
+
+#player_framegroup {
+	padding: 0px;
+	margin: 0px;
+	width: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	text-align: center;
+	opacity: 0;
+	display: none;
+}
+
+.frame_sel_player {
+	color: #cccccc;
+	width: 64px;
+	height: 18px;
+	padding: 0px;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: #003399;
+}
+
+#select_pmap {
+	display: none;
+}

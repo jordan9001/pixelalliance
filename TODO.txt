@@ -8,3 +8,8 @@ Order of todo:
     - server backbone
     - message types
     - ...
+
+
+Other:
+	Good scrolling
+	Chat

@@ -35,6 +35,20 @@
 						<button id="fsela" onclick="toggle_frame(this)" class="_box frame_sel">11</button>
 						<button id="fselb" onclick="toggle_frame(this)" class="_box frame_sel">12</button>
 					</div>
+					<div id="player_framegroup" class="row">
+						<div class="row">
+							<button id="p_up" onclick="toggle_playermap(this)" class="_box frame_sel_player">up</button>
+							<button id="p_down" onclick="toggle_playermap(this)" class="_box frame_sel_player">down</button>
+							<button id="p_left" onclick="toggle_playermap(this)" class="_box frame_sel_player">right</button>
+							<button id="p_right" onclick="toggle_playermap(this)" class="_box frame_sel_player">left</button>
+						</div>
+						<div class="row">
+							<button id="p_mov_up" onclick="toggle_playermap(this)" class="_box frame_sel_player">m up</button>
+							<button id="p_mov_down" onclick="toggle_playermap(this)" class="_box frame_sel_player">m down</button>
+							<button id="p_mov_left" onclick="toggle_playermap(this)" class="_box frame_sel_player">m right</button>
+							<button id="p_mov_right" onclick="toggle_playermap(this)" class="_box frame_sel_player">m left</button>
+						</div>
+					</div>
 					<div class="row">
 						<div class="col f6">
 							<input id="aniframe" class="_full-width" oninput="change_frame(this.value)" type="number" min="1" max="12" value="1"/>
@@ -49,6 +63,23 @@
 						</div>
 						<div class="col f6">
 							<label for="brushsz">Brush Size</label>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col f6">
+							<button id="edit_player" onclick="toggle_editplayer(this)" class="_active _width100">Player</button>
+						</div>
+						<div class="col f6">
+							<select id="select_pmap" class="_width100" oninput="change_playermap(this.value)">
+								<option value="up">Up</option>
+								<option value="down">Down</option>
+								<option value="left">Left</option>
+								<option value="right">Right</option>
+								<option value="m_up">Move Up</option>
+								<option value="m_down">Move Down</option>
+								<option value="m_left">Move Left</option>
+								<option value="m_right">Move Right</option>
+							</select>
 						</div>
 					</div>
 				</div>

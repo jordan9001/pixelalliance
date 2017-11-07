@@ -24,6 +24,8 @@ let rpicker = document.getElementById("rinp");
 let gpicker = document.getElementById("ginp");
 let bpicker = document.getElementById("binp");
 let brushszinp = document.getElementById("brushsz");
+let sel_pmap = document.getElementById("select_pmap");
+let pframeg = document.getElementById("player_framegroup");
 
 // important state vars
 let dirty_draw = false;
@@ -33,6 +35,7 @@ let wdown = false;
 let sdown = false;
 let ddown = false;
 let adown = false;
+let editing_player = false;
 
 // get a game instance
 console.log("Creating game");
@@ -60,15 +63,35 @@ function get_color() {
 let rcontrol_state = true;
 function toggle_rightctr() {
 	if (rcontrol_state) {
-		Velocity(rcontrol, {opacity: 0, translateX:"100%"}, {duration: 500, complete: function(elements) {
+		Velocity(rcontrol, {opacity: 0, translateX: "100%"}, {duration: 500, complete: function(elements) {
 			elements[0].style.display = "none";
 		}});
 	} else {
-		Velocity(rcontrol, {opacity: 1, translateX:"0%"}, {duration: 500, begin: function(elements) {
+		Velocity(rcontrol, {opacity: 1, translateX: "0%"}, {duration: 500, begin: function(elements) {
 			elements[0].style.display = "block";
 		}});
 	}
 	rcontrol_state = !rcontrol_state;
+}
+
+function toggle_editplayer() {
+	console.log("Hey");
+	if (editing_player) {
+		Velocity(pframeg, {opacity: 0}, {duration: 500, complete: function(elements) {
+			elements[0].style.display = "none";
+		}});
+		Velocity(sel_pmap, {opacity: 0}, {duration: 500, complete: function(elements) {
+			elements[0].style.display = "none";
+		}});
+	} else {
+		Velocity(pframeg, {opacity: 1}, {duration: 500, begin: function(elements) {
+			elements[0].style.display = "block";
+		}});
+		Velocity(sel_pmap, {opacity: 1}, {duration: 500, begin: function(elements) {
+			elements[0].style.display = "block";
+		}});
+	}
+	editing_player = !editing_player;
 }
 
 function toggle_frame(framebtn) {
