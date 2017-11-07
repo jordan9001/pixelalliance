@@ -1,6 +1,7 @@
 Order of todo:
     - edit/draw player
         - Edit player button
+        - Frame select buttons drop down to include player direction/movement "frames"
 	- Drop down to choose state to edit
         - draw player
     - collision
