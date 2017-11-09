@@ -74,7 +74,6 @@ function toggle_rightctr() {
 }
 
 function toggle_editplayer() {
-	console.log("Hey");
 	if (game.selected_player) {
 		Velocity(pframeg, {opacity: 0}, {duration: 500, complete: function(elements) {
 			elements[0].style.display = "none";
@@ -94,29 +93,91 @@ function toggle_editplayer() {
 }
 
 function toggle_playermap(btn) {
-	//TODO
-	console.log(btn.id);
+	let dir = 0;
+	switch (btn.id) {
+	case "p_up":
+		dir = pmap_up;
+		break;
+	case "p_down":
+		dir = pmap_down;
+		break;
+	case "p_left":
+		dir = pmap_left;
+		break;
+	case "p_right":
+		dir = pmap_right;
+		break;
+	case "p_m_up":
+		dir = pmap_mov_up;
+		break;
+	case "p_m_down":
+		dir = pmap_mov_down;
+		break;
+	case "p_m_left":
+		dir = pmap_mov_left;
+		break;
+	case "p_m_right":
+		dir = pmap_mov_right;
+		break;
+	}
+	console.log(btn.id, dir);
+
+	let selected = false;
+
+	let i=0;
+	for (; i<game.selected_playermaps.length; i++) {
+		if (dir == game.selected_playermaps[i]) {
+			selected = true;
+			break;
+		}
+	}
+
+
+	if (!selected) {
+		// add it to the selected
+		game.selected_playermaps.push(dir);
+		btn.style.backgroundColor = COLOR_SELECTED;
+	} else {
+		// unselect this one
+		game.selected_playermaps.splice(i, 1);
+		btn.style.backgroundColor = COLOR_NOT_SELECTED;
+	}
+	console.log(game.selected_playermaps);
 }
 
 function change_playermap(mapname) {
-	console.log(mapname);
-	//TODO
 	switch (mapname) {
 	case "up":
+		game.player.moving = false;
+		game.player.last_dir = move_up;
 		break;
 	case "down":
+		game.player.moving = false;
+		game.player.last_dir = move_down;
 		break;
 	case "left":
+		game.player.moving = false;
+		game.player.last_dir = move_left;
 		break;
 	case "right":
+		game.player.moving = false;
+		game.player.last_dir = move_right;
 		break;
 	case "m_up":
+		game.player.moving = true;
+		game.player.last_dir = move_up;
 		break;
 	case "m_down":
+		game.player.moving = true;
+		game.player.last_dir = move_down;
 		break;
 	case "m_left":
+		game.player.moving = true;
+		game.player.last_dir = move_left;
 		break;
 	case "m_right":
+		game.player.moving = true;
+		game.player.last_dir = move_right;
 		break;
 	}
 }
@@ -282,45 +343,63 @@ canvas.addEventListener('contextmenu', function(evt) {
 });
 
 document.addEventListener('keydown', function(evt) {
-	console.log("dwn");
+	let movekey = false;
 	switch (evt.keyCode) {
 	case wkc:
 	case upkc:
 		wdown = true;
+		movekey = true;
 		break;
 	case skc:
 	case dnkc:
 		sdown = true;
+		movekey = true;
 		break;
 	case dkc:
 	case rikc:
 		ddown = true;
+		movekey = true;
 		break;
 	case akc:
 	case lekc:
 		adown = true;
+		movekey = true;
 		break;
+	}
+
+	if (movekey) {
+		game.player.moving = true;
 	}
 }, false);
 
 document.addEventListener('keyup', function(evt) {
-	console.log("up");
+	let movekey = false;
 	switch (evt.keyCode) {
 	case wkc:
 	case upkc:
 		wdown = false;
+		movekey = true;
 		break;
 	case skc:
 	case dnkc:
 		sdown = false;
+		movekey = true;
 		break;
 	case dkc:
 	case rikc:
 		ddown = false;
+		movekey = true;
 		break;
 	case akc:
 	case lekc:
 		adown = false;
+		movekey = true;
 		break;
+	}
+	
+	if (movekey) {
+		if (!wdown && !adown && !sdown && !ddown) {
+			game.player.moving = false;
+		}
 	}
 }, false);
