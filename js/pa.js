@@ -13,8 +13,8 @@ const move_down = 2;
 const move_left = 3;
 const move_amount = 0.50;
 
-const max_player_w = 3;
-const max_player_h = 3;
+const max_player_w = 18;
+const max_player_h = 18;
 
 const pmap_up = 0;
 const pmap_right = 1;
@@ -26,7 +26,7 @@ const pmap_mov_down = 6;
 const pmap_mov_left = 7;
 const allpmaps = [0,1,2,3,4,5,6,7];
 
-const pixsz = 12;
+const pixsz = 9;
 
 // type pixel
 // 32 bit int
@@ -176,23 +176,23 @@ PixPlayer.prototype.curMap = function() {
 		break;
 	case move_right:
 		if (this.moving) {
-			map = this.mov_up_map;
+			map = this.mov_right_map;
 		} else {
-			map = this.up_map;
+			map = this.right_map;
 		}
 		break;
 	case move_down:
 		if (this.moving) {
-			map = this.mov_up_map;
+			map = this.mov_down_map;
 		} else {
-			map = this.up_map;
+			map = this.down_map;
 		}
 		break;
 	case move_left:
 		if (this.moving) {
-			map = this.mov_up_map;
+			map = this.mov_left_map;
 		} else {
-			map = this.up_map;
+			map = this.left_map;
 		}
 		break;
 	}

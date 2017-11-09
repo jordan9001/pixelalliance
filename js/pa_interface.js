@@ -142,7 +142,6 @@ function toggle_playermap(btn) {
 		game.selected_playermaps.splice(i, 1);
 		btn.style.backgroundColor = COLOR_NOT_SELECTED;
 	}
-	console.log(game.selected_playermaps);
 }
 
 function change_playermap(mapname) {
@@ -180,10 +179,10 @@ function change_playermap(mapname) {
 		game.player.last_dir = move_right;
 		break;
 	}
+	dirty_draw = true;
 }
 
 function toggle_frame(framebtn) {
-	console.log(framebtn);
 	let selected = false;
 	let frameid = parseInt(framebtn.id.substr(4), 16);
 	// check if it is selected
