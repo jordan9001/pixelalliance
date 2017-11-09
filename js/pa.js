@@ -7,6 +7,25 @@ const maph = 0x1234;
 const aniframes = 12;
 const allframes = [0,1,2,3,4,5,6,7,8,9,10,11];
 
+const move_up = 0;
+const move_right = 1;
+const move_down = 2;
+const move_left = 3;
+const move_amount = 0.50;
+
+const max_player_w = 9;
+const max_player_h = 15;
+
+const pmap_up = 0;
+const pmap_right = 1;
+const pmap_down = 2;
+const pmap_left = 3;
+const pmap_mov_up = 4;
+const pmap_mov_right = 5;
+const pmap_mov_down = 6;
+const pmap_mov_left = 7;
+const allpmaps = [0,1,2,3,4,5,6,7];
+
 const pixsz = 12;
 
 // type pixel
@@ -79,14 +98,6 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame) {
 }
 
 // type PixPlayer
-const move_up = 0;
-const move_right = 1;
-const move_down = 2;
-const move_left = 3;
-const move_amount = 0.50;
-
-const max_player_w = 9;
-const max_player_h = 15;
 
 function PixPlayer(x, y) {
 	this.x = x; // floating point position values
@@ -196,6 +207,8 @@ function PixGame(canvas) {
 	this.selected_y = 0;
 	this.selected_color = DEF_COLOR;
 	this.selected_frames = allframes;
+	this.selected_player = false;
+	this.selected_playermaps = allpmaps;
 
 	this.pensz = 1;
 }

@@ -1,9 +1,8 @@
 Order of todo:
     - edit/draw player
-        - Edit player button
-        - Frame select buttons drop down to include player direction/movement "frames"
-	- Drop down to choose state to edit
-        - draw player
+	- Draw black frame around drawable area
+	- Actually select pmap and draw to it
+	- Change between pmaps with select
     - collision
     - server backbone
     - message types

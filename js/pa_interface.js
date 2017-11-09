@@ -35,7 +35,6 @@ let wdown = false;
 let sdown = false;
 let ddown = false;
 let adown = false;
-let editing_player = false;
 
 // get a game instance
 console.log("Creating game");
@@ -76,7 +75,7 @@ function toggle_rightctr() {
 
 function toggle_editplayer() {
 	console.log("Hey");
-	if (editing_player) {
+	if (game.selected_player) {
 		Velocity(pframeg, {opacity: 0}, {duration: 500, complete: function(elements) {
 			elements[0].style.display = "none";
 		}});
@@ -91,7 +90,35 @@ function toggle_editplayer() {
 			elements[0].style.display = "block";
 		}});
 	}
-	editing_player = !editing_player;
+	game.selected_player = !game.selected_player;
+}
+
+function toggle_playermap(btn) {
+	//TODO
+	console.log(btn.id);
+}
+
+function change_playermap(mapname) {
+	console.log(mapname);
+	//TODO
+	switch (mapname) {
+	case "up":
+		break;
+	case "down":
+		break;
+	case "left":
+		break;
+	case "right":
+		break;
+	case "m_up":
+		break;
+	case "m_down":
+		break;
+	case "m_left":
+		break;
+	case "m_right":
+		break;
+	}
 }
 
 function toggle_frame(framebtn) {
