@@ -220,6 +220,7 @@ function PixGame(canvas) {
 	this.selected_frames = allframes;
 	this.selected_player = false;
 	this.selected_playermaps = allpmaps;
+	this.selected_collision = false;
 
 	this.pensz = 1;
 }

@@ -73,6 +73,10 @@ function toggle_rightctr() {
 	rcontrol_state = !rcontrol_state;
 }
 
+function toggle_editcol() {
+	game.selected_collision = !game.selected_collision;
+}
+
 function toggle_editplayer() {
 	if (game.selected_player) {
 		Velocity(pframeg, {opacity: 0}, {duration: 500, complete: function(elements) {
