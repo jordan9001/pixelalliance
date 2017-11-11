@@ -68,7 +68,7 @@ PixMap.prototype.get = function(x, y, frame) {
 	return this.map[off];
 }
 
-PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background=true) {
+PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background, draw_col) {
 	//console.log("drawing map "+ x +","+ y +" "+ w +","+ h);
 	//console.log("From "+ sx +","+ sy);
 	let cy = y;
@@ -83,16 +83,24 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background=true
 			if ((px === undefined) || !(px & PIX_ACTIVE)) {
 				if (background) {
 					ctx.fillStyle = BACK_COLOR;
-				} else {
-					csx += pixsz;
-					cx++;
-					continue;
+					ctx.fillRect(csx-0.6, csy-0.6, pixsz+0.6, pixsz+0.6); // the 0.6 helps reduce ghosting
 				}
 			} else {
-				// debug
 				ctx.fillStyle = PIX_COLOR(px);
+				ctx.fillRect(csx-0.6, csy-0.6, pixsz+0.6, pixsz+0.6); // the 0.6 helps reduce ghosting
 			}
-			ctx.fillRect(csx-0.6, csy-0.6, pixsz+0.6, pixsz+0.6); // the 0.6 helps reduce ghosting
+
+			// draw collision
+			if (draw_col) {
+				if (px & PIX_COLLISION) {
+					ctx.strokeStyle = "#000000";
+					ctx.lineWidth = 4;
+					ctx.strokeRect(csx, csy, pixsz, pixsz);
+					ctx.strokeStyle = "#ffffff";
+					ctx.lineWidth = 2;
+					ctx.strokeRect(csx, csy, pixsz, pixsz);
+				}
+			}
 			csx += pixsz;
 			cx++;
 		}
@@ -123,13 +131,13 @@ function PixPlayer(x, y) {
 	this.pmaps = [this.up_map, this.right_map, this.down_map, this.left_map, this.mov_up_map, this.mov_right_map, this.mov_down_map, this.mov_left_map];
 }
 
-PixPlayer.prototype.draw = function(ctx, canx, cany, frame) {
+PixPlayer.prototype.draw = function(ctx, canx, cany, frame, draw_col) {
 	let map = this.curMap();
 
 	let canx_left = canx - (Math.floor(max_player_w / 2) * pixsz);
 	let cany_top = cany - (Math.floor(max_player_h / 2) * pixsz);
 
-	map.draw(ctx, canx_left, cany_top, 0, 0, map.w, map.h, frame, false);
+	map.draw(ctx, canx_left, cany_top, 0, 0, map.w, map.h, frame, false, draw_col);
 }
 
 PixPlayer.prototype.move = function(dir) {
@@ -244,7 +252,7 @@ PixGame.prototype.draw = function() {
 	top_edge = Math.floor(top_edge);
 	
 	// draw the map
-	this.map.draw(this.ctx, -left_off, -top_off, left_edge, top_edge, this.can_w, this.can_h, this.frame);
+	this.map.draw(this.ctx, -left_off, -top_off, left_edge, top_edge, this.can_w, this.can_h, this.frame, true, (game.selected_collision && !game.selected_player));
 	
 	// draw selected pixel cursor
 	if (PIX_ACTIVE & this.selected_color) {
@@ -265,7 +273,7 @@ PixGame.prototype.draw = function() {
 	}
 
 	// draw main player
-	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_h2 * pixsz, this.frame);
+	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_h2 * pixsz, this.frame, false, (game.selected_collision && game.selected_player));
 
 	// draw other players
 	// get the canvas coordinates for the player coordinates

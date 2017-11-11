@@ -338,6 +338,8 @@ canvas.addEventListener('wheel', function(evt) {
 	}
 	brushszinp.value = game.pensz;
 	dirty_draw = true;
+
+	evt.preventDefault();
 });
 
 canvas.addEventListener('contextmenu', function(evt) {
@@ -372,6 +374,7 @@ document.addEventListener('keydown', function(evt) {
 
 	if (movekey) {
 		game.player.moving = true;
+		evt.preventDefault();
 	}
 }, false);
 
@@ -404,5 +407,6 @@ document.addEventListener('keyup', function(evt) {
 		if (!wdown && !adown && !sdown && !ddown) {
 			game.player.moving = false;
 		}
+		evt.preventDefault();
 	}
 }, false);
