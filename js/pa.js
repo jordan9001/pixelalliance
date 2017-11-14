@@ -37,6 +37,7 @@ const PIX_ACTIVE = 0x08000000;
 const PIX_LOCKED = 0x04000000;
 const PIX_TOP = 0x02000000;
 const PIX_COLLISION = 0x01000000;
+const PIX_NOT_COLLISION = ~PIX_COLLISION;
 const DEF_COLOR = (PIX_ACTIVE | 0xff0000);
 function PIX_COLOR(px) {
 	let r = (px & 0xff0000) >> 0x10;
@@ -60,6 +61,17 @@ PixMap.prototype.set = function(x, y, pixel, frames) {
 	xyoff = (y * this.w) + x;
 	for (let f=0; f<frames.length; f++) {
 		this.map[(frames[f] * (this.w*this.h)) + xyoff] = pixel;
+	}
+}
+
+PixMap.prototype.setCol = function(x, y, erase, frames) {
+	xyoff = (y * this.w) + x;
+	for (let f=0; f<frames.length; f++) {
+		if (erase) {
+			this.map[(frames[f] * (this.w*this.h)) + xyoff] &= PIX_NOT_COLLISION;
+		} else {
+			this.map[(frames[f] * (this.w*this.h)) + xyoff] |= PIX_COLLISION;
+		}
 	}
 }
 
@@ -95,10 +107,10 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background, dra
 				if (px & PIX_COLLISION) {
 					ctx.strokeStyle = "#000000";
 					ctx.lineWidth = 4;
-					ctx.strokeRect(csx, csy, pixsz, pixsz);
+					ctx.strokeRect(csx+2, csy+2, pixsz-2, pixsz-2);
 					ctx.strokeStyle = "#ffffff";
 					ctx.lineWidth = 2;
-					ctx.strokeRect(csx, csy, pixsz, pixsz);
+					ctx.strokeRect(csx+2, csy+2, pixsz-2, pixsz-2);
 				}
 			}
 			csx += pixsz;
@@ -265,11 +277,11 @@ PixGame.prototype.draw = function() {
 
 	// if we are drawing the player for editing, draw the surrounding area a see through black
 	if (this.selected_player) {
-	this.ctx.fillStyle = "rgba(0,0,0,0.4)";
-	this.ctx.fillRect(0, 0, this.canvas.width, (this.can_h2 - Math.floor(max_player_h / 2)) * pixsz);
-	this.ctx.fillRect(0, 0, (this.can_w2 - Math.floor(max_player_w / 2)) * pixsz, this.canvas.height);
-	this.ctx.fillRect(0, (this.can_h2 + Math.ceil(max_player_h / 2)) * pixsz, this.canvas.width, (this.can_h2 - Math.ceil(max_player_h / 2)) * pixsz);
-	this.ctx.fillRect((this.can_w2 + Math.ceil(max_player_w / 2)) * pixsz, 0, (this.can_w2 - Math.ceil(max_player_w / 2)) * pixsz, this.canvas.height);
+		this.ctx.fillStyle = "rgba(0,0,0,0.4)";
+		this.ctx.fillRect(0, 0, this.canvas.width, (this.can_h2 - Math.floor(max_player_h / 2)) * pixsz);
+		this.ctx.fillRect(0, 0, (this.can_w2 - Math.floor(max_player_w / 2)) * pixsz, this.canvas.height);
+		this.ctx.fillRect(0, (this.can_h2 + Math.ceil(max_player_h / 2)) * pixsz, this.canvas.width, (this.can_h2 - Math.ceil(max_player_h / 2)) * pixsz);
+		this.ctx.fillRect((this.can_w2 + Math.ceil(max_player_w / 2)) * pixsz, 0, (this.can_w2 - Math.ceil(max_player_w / 2)) * pixsz, this.canvas.height);
 	}
 
 	// draw main player
@@ -309,7 +321,11 @@ PixGame.prototype.colorSel = function(erase=false) {
 					continue;
 				}
 				for (i=0; i<this.selected_playermaps.length; i++) {
-					pmaps[this.selected_playermaps[i]].set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
+					if (this.selected_collision) {
+						pmaps[this.selected_playermaps[i]].setCol(fx, fy, erase, this.selected_frames);
+					} else {
+						pmaps[this.selected_playermaps[i]].set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
+					}
 				}
 			}
 		}
@@ -320,7 +336,12 @@ PixGame.prototype.colorSel = function(erase=false) {
 				fy = this.selected_y + dy - penoff;
 				fx = (fx + this.map.w) % this.map.w;
 				fy = (fy + this.map.h) % this.map.h;
-				this.map.set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
+
+				if (this.selected_collision) {
+					this.map.setCol(fx, fy, erase, this.selected_frames);
+				} else {
+					this.map.set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
+				}
 			}
 		}
 	}
