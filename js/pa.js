@@ -13,8 +13,8 @@ const move_down = 2;
 const move_left = 3;
 const move_amount = 0.50;
 
-const max_player_w = 18;
-const max_player_h = 18;
+const max_player_w = 12;
+const max_player_h = 12;
 
 const pmap_up = 0;
 const pmap_right = 1;
@@ -26,7 +26,9 @@ const pmap_mov_down = 6;
 const pmap_mov_left = 7;
 const allpmaps = [0,1,2,3,4,5,6,7];
 
-const pixsz = 9;
+const pixsz = 15;
+const COL_OFF = 3;
+const COL_OFF2 = 6;
 
 // type pixel
 // 32 bit int
@@ -106,11 +108,10 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background, dra
 			if (draw_col) {
 				if (px & PIX_COLLISION) {
 					ctx.strokeStyle = "#000000";
-					ctx.lineWidth = 4;
-					ctx.strokeRect(csx+2, csy+2, pixsz-2, pixsz-2);
-					ctx.strokeStyle = "#ffffff";
+					ctx.fillStyle = "#ffffff";
 					ctx.lineWidth = 2;
-					ctx.strokeRect(csx+2, csy+2, pixsz-2, pixsz-2);
+					ctx.fillRect(csx+COL_OFF, csy+COL_OFF, pixsz-COL_OFF2, pixsz-COL_OFF2);
+					ctx.strokeRect(csx+COL_OFF, csy+COL_OFF, pixsz-COL_OFF2, pixsz-COL_OFF2);
 				}
 			}
 			csx += pixsz;
