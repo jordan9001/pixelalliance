@@ -26,6 +26,7 @@ let bpicker = document.getElementById("binp");
 let brushszinp = document.getElementById("brushsz");
 let sel_pmap = document.getElementById("select_pmap");
 let pframeg = document.getElementById("player_framegroup");
+let col_label = document.getElementById("collision_label");
 
 // important state vars
 let dirty_draw = false;
@@ -75,6 +76,11 @@ function toggle_rightctr() {
 
 function toggle_editcol() {
 	game.selected_collision = !game.selected_collision;
+	if (game.selected_collision) {
+		col_label.innerText = "Editing Collision";	
+	} else {
+		col_label.innerText = "";	
+	}
 }
 
 function toggle_editplayer() {

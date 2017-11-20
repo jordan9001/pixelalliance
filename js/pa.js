@@ -35,6 +35,7 @@ const COL_OFF2 = 6;
 // flags, r, g, b
 const PIX_BLANK = 0x0;
 const BACK_COLOR = "rgb(255, 255, 255)";
+const BACK_PX = 0x00ffffff;
 const PIX_ACTIVE = 0x08000000;
 const PIX_LOCKED = 0x04000000;
 const PIX_TOP = 0x02000000;
@@ -67,12 +68,18 @@ PixMap.prototype.set = function(x, y, pixel, frames) {
 }
 
 PixMap.prototype.setCol = function(x, y, erase, frames) {
-	xyoff = (y * this.w) + x;
+	let xyoff = (y * this.w) + x;
+	let mul = (this.w * this.h);
 	for (let f=0; f<frames.length; f++) {
 		if (erase) {
-			this.map[(frames[f] * (this.w*this.h)) + xyoff] &= PIX_NOT_COLLISION;
+			this.map[(frames[f] * mul) + xyoff] &= PIX_NOT_COLLISION;
 		} else {
-			this.map[(frames[f] * (this.w*this.h)) + xyoff] |= PIX_COLLISION;
+			let val = this.map[(frames[f] * mul) + xyoff];
+			if (val === undefined) {
+				val = BACK_PX;
+			}
+			val |= PIX_COLLISION;
+			this.map[(frames[f] * mul) + xyoff] = val;
 		}
 	}
 }
@@ -83,8 +90,9 @@ PixMap.prototype.get = function(x, y, frame) {
 }
 
 PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background, draw_col) {
-	//console.log("drawing map "+ x +","+ y +" "+ w +","+ h);
-	//console.log("From "+ sx +","+ sy);
+	if (this.w < 100) {
+		console.log(this.w, draw_col);
+	}
 	let cy = y;
 	let csy = sy;
 	let cx = 0;
@@ -107,11 +115,9 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background, dra
 			// draw collision
 			if (draw_col) {
 				if (px & PIX_COLLISION) {
-					ctx.strokeStyle = "#000000";
-					ctx.fillStyle = "#ffffff";
-					ctx.lineWidth = 2;
+					// invert color
+					ctx.fillStyle = PIX_COLOR(~px);
 					ctx.fillRect(csx+COL_OFF, csy+COL_OFF, pixsz-COL_OFF2, pixsz-COL_OFF2);
-					ctx.strokeRect(csx+COL_OFF, csy+COL_OFF, pixsz-COL_OFF2, pixsz-COL_OFF2);
 				}
 			}
 			csx += pixsz;
@@ -265,7 +271,7 @@ PixGame.prototype.draw = function() {
 	top_edge = Math.floor(top_edge);
 	
 	// draw the map
-	this.map.draw(this.ctx, -left_off, -top_off, left_edge, top_edge, this.can_w, this.can_h, this.frame, true, (game.selected_collision && !game.selected_player));
+	this.map.draw(this.ctx, -left_off, -top_off, left_edge, top_edge, this.can_w, this.can_h, this.frame, true, (this.selected_collision && !this.selected_player));
 	
 	// draw selected pixel cursor
 	if (PIX_ACTIVE & this.selected_color) {
@@ -284,9 +290,10 @@ PixGame.prototype.draw = function() {
 		this.ctx.fillRect(0, (this.can_h2 + Math.ceil(max_player_h / 2)) * pixsz, this.canvas.width, (this.can_h2 - Math.ceil(max_player_h / 2)) * pixsz);
 		this.ctx.fillRect((this.can_w2 + Math.ceil(max_player_w / 2)) * pixsz, 0, (this.can_w2 - Math.ceil(max_player_w / 2)) * pixsz, this.canvas.height);
 	}
+	console.log(this.selected_collision, this.selected_player);
 
 	// draw main player
-	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_h2 * pixsz, this.frame, false, (game.selected_collision && game.selected_player));
+	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_h2 * pixsz, this.frame, (this.selected_collision && this.selected_player));
 
 	// draw other players
 	// get the canvas coordinates for the player coordinates
