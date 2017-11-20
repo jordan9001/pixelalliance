@@ -1,5 +1,6 @@
 Order of todo:
     - collision
+    - switch collision control to be a checkbox
     - server backbone
     - message types
     - ...
