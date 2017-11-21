@@ -247,17 +247,17 @@ function do_update(ts) {
 	// move stuff
 	let moved = false;
 	if (wdown) {
-		game.player.move(move_up, game.map);
+		game.player.move(move_up, game.map, game.frame);
 		moved = true;
 	} else if (sdown) {
-		game.player.move(move_down, game.map);
+		game.player.move(move_down, game.map, game.frame);
 		moved = true;
 	}
 	if (ddown) {
-		game.player.move(move_right, game.map);
+		game.player.move(move_right, game.map, game.frame);
 		moved = true;
 	} else if (adown) {
-		game.player.move(move_left, game.map);
+		game.player.move(move_left, game.map, game.frame);
 		moved = true;
 	}
 	if (moved) {

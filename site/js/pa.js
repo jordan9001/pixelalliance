@@ -61,9 +61,13 @@ function PixMap(w, h) {
 }
 
 PixMap.prototype.set = function(x, y, pixel, frames) {
-	xyoff = (y * this.w) + x;
+	let xyoff = (y * this.w) + x;
+	let off;
 	for (let f=0; f<frames.length; f++) {
-		this.map[(frames[f] * (this.w*this.h)) + xyoff] = pixel;
+		off = (frames[f] * (this.w*this.h)) + xyoff;
+		old = this.map[off];
+		pixel |= (old & 0xff000000);
+		this.map[off] = pixel;
 	}
 }
 
@@ -97,9 +101,6 @@ PixMap.prototype.get = function(x, y, frame) {
 }
 
 PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background, draw_col) {
-	if (this.w < 100) {
-		console.log(this.w, draw_col);
-	}
 	let cy = y;
 	let csy = sy;
 	let cx = 0;
@@ -166,7 +167,7 @@ PixPlayer.prototype.draw = function(ctx, canx, cany, frame, draw_col) {
 	map.draw(ctx, canx_left, cany_top, 0, 0, map.w, map.h, frame, false, draw_col);
 }
 
-PixPlayer.prototype.move = function(dir, undermap) {
+PixPlayer.prototype.move = function(dir, undermap, frame) {
 	let nexty = this.y;
 	let nextx = this.x;
 
@@ -192,13 +193,14 @@ PixPlayer.prototype.move = function(dir, undermap) {
 		// loop through the current player frame and cooresponding map grid, check if 2 collision pieces overlap
 		let xoff;
 		let yoff;
-		let mapxo = (Math.floor(this.nextx) - Math.floor(max_player_w / 2) + undermap.w) % undermap.w;
-		let mapyo = (Math.floor(this.nexty) - Math.floor(max_player_h / 2) + undermap.h) % undermap.h;
-		for (yoff=0; yoff<this.map.h; yoff++) {
-			for (xoff=0; xoff<this.map.w; xoff++) {
-				if (this.map.getCol(xoff, yoff)) {
+		let mapx = (Math.floor(nextx) - Math.floor(max_player_w / 2) + undermap.w) % undermap.w;
+		let mapy = (Math.floor(nexty) - Math.floor(max_player_h / 2) + undermap.h) % undermap.h;
+		let pmap = this.curMap()
+		for (yoff=0; yoff<max_player_h; yoff++) {
+			for (xoff=0; xoff<max_player_w; xoff++) {
+				if (pmap.getCol(xoff, yoff, frame)) {
 					// check the undermap
-					if (this.map.getCol((mapx+xoff) % undermap.w, (mapy+yoff) % undermap.h) {
+					if (undermap.getCol((mapx+xoff) % undermap.w, (mapy+yoff) % undermap.h, frame)) {
 						// would hit a collision, don't move
 						return false;
 					}
@@ -312,7 +314,6 @@ PixGame.prototype.draw = function() {
 		this.ctx.fillRect(0, (this.can_h2 + Math.ceil(max_player_h / 2)) * pixsz, this.canvas.width, (this.can_h2 - Math.ceil(max_player_h / 2)) * pixsz);
 		this.ctx.fillRect((this.can_w2 + Math.ceil(max_player_w / 2)) * pixsz, 0, (this.can_w2 - Math.ceil(max_player_w / 2)) * pixsz, this.canvas.height);
 	}
-	console.log(this.selected_collision, this.selected_player);
 
 	// draw main player
 	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_h2 * pixsz, this.frame, (this.selected_collision && this.selected_player));

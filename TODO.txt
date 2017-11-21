@@ -1,11 +1,10 @@
 Order of todo:
-    - collision
-    - switch collision control to be a checkbox
     - server backbone
     - message types
-    - ...
+    - client side
 
 
 Other:
 	Good scrolling
 	Chat
+	Better controls for collisions/top/layers/colors
