@@ -107,6 +107,13 @@ func handleMessages() {
 		case msg = <-msgin:
 			// TODO process change and send the change to everyone
 			log.Printf("Message : %#v\n", msg)
+			clients_mux.Lock()
+			for _, c := range clients {
+				if c.Id != msg.Id {
+					c.Out <- msg
+				}
+			}
+			clients_mux.Unlock()
 		}
 	}
 }
@@ -135,6 +142,20 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	var msgtype int
 	var p []byte
 	var msg msgctrl
+
+	// TODO WriteMessage loop
+	go func() {
+		for {
+			msg, ok := <-c.Out
+			if !ok {
+				break
+			}
+			log.Printf("%d sending msg: %#v\n", c.Id, msg)
+			// ws.WriteMessage(1, jsonmsg)
+		}
+	}()
+
+	// ReadMessage loop
 	for {
 		msgtype, p, err = ws.ReadMessage()
 		if err != nil {
@@ -178,7 +199,7 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	clients = append(clients[:ci], clients[ci+1:]...)
 	clients_mux.Unlock()
 
-	close(c.Out)
+	close(c.Out) // this triggers the end for the out routine
 
 	log.Printf("closed connection from %s\n", r.RemoteAddr)
 
