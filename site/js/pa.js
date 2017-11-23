@@ -274,6 +274,9 @@ function PixGame(canvas) {
 	this.selected_collision = false;
 
 	this.pensz = 1;
+
+	// set up connection
+	comms_init();
 }
 
 PixGame.prototype.draw = function() {
@@ -351,12 +354,19 @@ PixGame.prototype.colorSel = function(erase=false) {
 				if (fy < 0 || fy >= max_player_h) {
 					continue;
 				}
+				
 				for (i=0; i<this.selected_playermaps.length; i++) {
 					if (this.selected_collision) {
 						pmaps[this.selected_playermaps[i]].setCol(fx, fy, erase, this.selected_frames);
 					} else {
 						pmaps[this.selected_playermaps[i]].set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
 					}
+				}
+				// send the message
+				if (this.selected_collision) {
+					comms_player_col_draw(fx, fy, this.selected_frames, this.selected_playermaps, (erase)?0:PIX_COLLISION);
+				} else {
+					comms_player_draw(fx, fy, this.selected_frames, this.selected_playermaps, (erase)?PIX_BLANK:this.selected_color);
 				}
 			}
 		}
@@ -370,8 +380,10 @@ PixGame.prototype.colorSel = function(erase=false) {
 
 				if (this.selected_collision) {
 					this.map.setCol(fx, fy, erase, this.selected_frames);
+					comms_map_col_draw(fx, fy, this.selected_frames, (erase)?0:PIX_COLLISION);
 				} else {
 					this.map.set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
+					comms_map_draw(fx, fy, this.selected_frames, (erase)?PIX_BLANK:this.selected_color);
 				}
 			}
 		}
@@ -393,6 +405,12 @@ PixGame.prototype.getColorSel = function() {
 		}
 	}
 	return c;
+}
+
+PixGame.prototype.move = function(direction) {
+	this.player.move(direction, this.map, this.frame);
+	// send a message
+	comms_move(this.player.x, this.player.y);
 }
 
 PixGame.prototype.resetCan = function() {

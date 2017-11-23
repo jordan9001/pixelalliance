@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -11,14 +12,31 @@ import (
 
 // types
 type msgctrl struct {
-	msg []byte
+	T  int     `json:"t"`
+	Px float64 `json:"px"`
+	Py float64 `json:"py"`
+	X  int     `json:"x"`
+	Y  int     `json:"y"`
+	F  []int   `json:"f"`
+	D  []int   `json:"d"`
+	C  int     `json:"c"`
 }
+
 type client struct {
 	Out chan msgctrl
 }
 
 // constants
 const PORT string = ":8145"
+
+// message types
+const (
+	MSG_MAP_PAINT        = 0
+	MSG_PLAYER_PAINT     = 1
+	MSG_PLAYER_MOVE      = 2
+	MSG_MAP_COL_PAINT    = 3
+	MSG_PLAYER_COL_PAINT = 4
+)
 
 // global vars
 var clients []*client
@@ -84,7 +102,7 @@ func handleMessages() {
 	for {
 		select {
 		case msg = <-msgin:
-			log.Printf("Message : %q\n", msg)
+			log.Printf("Message : %#v\n", msg)
 		}
 	}
 }
@@ -109,6 +127,7 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 
 	var msgtype int
 	var p []byte
+	var msg msgctrl
 	for {
 		msgtype, p, err = ws.ReadMessage()
 		if err != nil {
@@ -118,8 +137,13 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 
 		switch msgtype {
 		case websocket.TextMessage:
-			log.Printf("Got Message %q\n", p)
-			msgin <- msgctrl{msg: p}
+			// unmarshall the message
+			err = json.Unmarshal(p, &msg)
+			if err != nil {
+				log.Printf("unmarshal err: %v\n", err)
+				break
+			}
+			msgin <- msg
 		case websocket.CloseMessage:
 			// one way to end connection
 			break
