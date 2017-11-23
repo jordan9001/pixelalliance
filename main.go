@@ -12,6 +12,7 @@ import (
 
 // types
 type msgctrl struct {
+	Id int     `json:"id"`
 	T  int     `json:"t"`
 	Px float64 `json:"px"`
 	Py float64 `json:"py"`
@@ -24,6 +25,7 @@ type msgctrl struct {
 
 type client struct {
 	Out chan msgctrl
+	Id  int
 }
 
 // constants
@@ -36,12 +38,13 @@ const (
 	MSG_PLAYER_MOVE      = 2
 	MSG_MAP_COL_PAINT    = 3
 	MSG_PLAYER_COL_PAINT = 4
+	MSG_PLAYER_REMOVE    = 5
 )
 
 // global vars
 var clients []*client
 var clients_mux = &sync.Mutex{}
-
+var player_id_counter int = 0
 var msgin chan msgctrl
 
 // configure websocket upgrader
@@ -102,6 +105,7 @@ func handleMessages() {
 	for {
 		select {
 		case msg = <-msgin:
+			// TODO process change and send the change to everyone
 			log.Printf("Message : %#v\n", msg)
 		}
 	}
@@ -121,7 +125,10 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	var c client
 	c.Out = make(chan msgctrl)
 	// add it to the global slice
+
 	clients_mux.Lock()
+	c.Id = player_id_counter
+	player_id_counter++
 	clients = append(clients, &c)
 	clients_mux.Unlock()
 
@@ -143,12 +150,15 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 				log.Printf("unmarshal err: %v\n", err)
 				break
 			}
+			// add the player id to it
+			msg.Id = c.Id
+			// send it for processing
 			msgin <- msg
 		case websocket.CloseMessage:
 			// one way to end connection
 			break
 		}
-		// ignore other type
+		// ignore other types
 	}
 
 	// remove the client from the list of clients
@@ -171,4 +181,6 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	close(c.Out)
 
 	log.Printf("closed connection from %s\n", r.RemoteAddr)
+
+	// TODO send out a player remove message to everyone
 }

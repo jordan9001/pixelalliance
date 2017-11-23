@@ -42,6 +42,7 @@ const PIX_TOP = 0x02000000;
 const PIX_COLLISION = 0x01000000;
 const PIX_NOT_COLLISION = ~PIX_COLLISION;
 const DEF_COLOR = (PIX_ACTIVE | 0xff0000);
+const COL_MASK = 0xf7000000;
 function PIX_COLOR(px) {
 	let r = (px & 0xff0000) >> 0x10;
 	let g = (px & 0xff00) >> 0x08;
@@ -66,7 +67,7 @@ PixMap.prototype.set = function(x, y, pixel, frames) {
 	for (let f=0; f<frames.length; f++) {
 		off = (frames[f] * (this.w*this.h)) + xyoff;
 		old = this.map[off];
-		pixel |= (old & 0xff000000);
+		pixel |= (old & COL_MASK);
 		this.map[off] = pixel;
 	}
 }
