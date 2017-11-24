@@ -24,9 +24,8 @@ type msgctrl struct {
 }
 
 type client struct {
-	Out   chan msgctrl
-	Id    int
-	Block int
+	Out chan msgctrl
+	Id  int
 }
 
 // constants
@@ -59,6 +58,7 @@ func init() {
 	clients = make([]*client, 0, 8)
 	// set up our inward channel
 	msgin = make(chan msgctrl)
+	state_init()
 }
 
 func main() {
@@ -113,7 +113,7 @@ func handleMessages() {
 			// TODO process change and send the change to everyone
 			switch msg.T {
 			case MSG_MAP_PAINT:
-				//TODO
+				update_map(msg.X, msg.Y, msg.C, msg.F)
 			case MSG_MAP_COL_PAINT:
 				//TODO
 			}
@@ -154,7 +154,10 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	var p []byte
 	var msg msgctrl
 
-	// TODO WriteMessage loop
+	// Get this client up to date
+	go send_updates(c)
+
+	// WriteMessage loop
 	go func() {
 		for {
 			msg, ok := <-c.Out
