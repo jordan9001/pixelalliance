@@ -1,8 +1,8 @@
 // this file contains the game code, including drawing and networking
 
 // default values
-const mapw = 0x750;
-const maph = 0x750;
+const mapw = 0x900;
+const maph = 0x900;
 
 const aniframes = 12;
 const allframes = [0,1,2,3,4,5,6,7,8,9,10,11];
@@ -15,38 +15,32 @@ const move_amount = 0.50;
 
 const max_player_w = 12;
 const max_player_h = 12;
-
-const pmap_up = 0;
-const pmap_right = 1;
-const pmap_down = 2;
-const pmap_left = 3;
-const pmap_mov_up = 4;
-const pmap_mov_right = 5;
-const pmap_mov_down = 6;
-const pmap_mov_left = 7;
-const allpmaps = [0,1,2,3,4,5,6,7];
+const max_player_w2 = Math.floor(max_player_w / 2);
+const max_player_h2 = Math.floor(max_player_h / 2);
 
 const pixsz = 15;
 const COL_OFF = 3;
 const COL_OFF2 = 6;
 
 // type pixel
-// 32 bit int
+// 16 bit int
 // flags, r, g, b
 const PIX_BLANK = 0x0;
-const BACK_COLOR = "rgb(255, 255, 255)";
-const BACK_PX = 0x00ffffff;
-const PIX_ACTIVE = 0x08000000;
-const PIX_LOCKED = 0x04000000;
-const PIX_TOP = 0x02000000;
-const PIX_COLLISION = 0x01000000;
+const BACK_COLOR = "#fff";
+const BACK_PX = 0x0fff;
+const PIX_ACTIVE = 0x4000;
+const PIX_LOCKED = 0x2000;
+const PIX_COLLISION = 0x1000;
 const PIX_NOT_COLLISION = ~PIX_COLLISION;
-const DEF_COLOR = (PIX_ACTIVE | 0xff0000);
-const COL_MASK = 0xf7000000;
+const DEF_COLOR = (PIX_ACTIVE | 0xf00);
+const COL_MASK = ~PIX_ACTIVE & 0xf000;
 function PIX_COLOR(px) {
-	let r = (px & 0xff0000) >> 0x10;
-	let g = (px & 0xff00) >> 0x08;
-	let b = (px & 0xff);
+	let r = (px & 0xf00) >> 4;
+	let g = (px & 0xf0);
+	let b = (px & 0xf) << 4;
+	r |= (r >> 4);
+	g |= (g >> 4);
+	b |= (b >> 4);
 	return "rgb(" + r +","+ g +","+ b + ")";
 }
 
@@ -58,16 +52,18 @@ function PixMap(w, h) {
 	this.h = h;
 	
 	// allocate the map
-	this.map = new Array(h*w*aniframes);
+	this.map = new Uint16Array(h*w*aniframes);
 }
 
-PixMap.prototype.set = function(x, y, pixel, frames) {
+PixMap.prototype.set = function(x, y, pixel, frames, withcol=false) {
 	let xyoff = (y * this.w) + x;
 	let off;
 	for (let f=0; f<frames.length; f++) {
 		off = (frames[f] * (this.w*this.h)) + xyoff;
 		old = this.map[off];
-		pixel |= (old & COL_MASK);
+		if (!withcol) {
+			pixel |= (old & COL_MASK);
+		}
 		this.map[off] = pixel;
 	}
 }
@@ -124,6 +120,9 @@ PixMap.prototype.draw = function(ctx, sx, sy, x, y, w, h, frame, background, dra
 			// draw collision
 			if (draw_col) {
 				if (px & PIX_COLLISION) {
+					if (!(px & PIX_ACTIVE)) {
+						px = BACK_PX;
+					}
 					// invert color
 					ctx.fillStyle = PIX_COLOR(~px);
 					ctx.fillRect(csx+COL_OFF, csy+COL_OFF, pixsz-COL_OFF2, pixsz-COL_OFF2);
@@ -143,67 +142,80 @@ function PixPlayer(x, y) {
 	this.x = x; // floating point position values
 	this.y = y;
 
-	this.last_dir = move_down; // direction to draw
-	this.moving = false; // state to draw
+	this.known_location = false;
 
-	this.up_map = new PixMap(max_player_w, max_player_h);
-	this.right_map = new PixMap(max_player_w, max_player_h);
-	this.down_map = new PixMap(max_player_w, max_player_h);
-	this.left_map = new PixMap(max_player_w, max_player_h);
-
-	this.mov_up_map = new PixMap(max_player_w, max_player_h);
-	this.mov_right_map = new PixMap(max_player_w, max_player_h);
-	this.mov_down_map = new PixMap(max_player_w, max_player_h);
-	this.mov_left_map = new PixMap(max_player_w, max_player_h);
-
-	this.pmaps = [this.up_map, this.right_map, this.down_map, this.left_map, this.mov_up_map, this.mov_right_map, this.mov_down_map, this.mov_left_map];
+	this.map = new PixMap(max_player_w, max_player_h);
 }
 
 PixPlayer.prototype.draw = function(ctx, canx, cany, frame, draw_col) {
-	let map = this.curMap();
+	if (!this.known_location) {
+		return;
+	}
+	let canx_left = canx - (max_player_w2 * pixsz);
+	let cany_top = cany - (max_player_h2 * pixsz);
 
-	let canx_left = canx - (Math.floor(max_player_w / 2) * pixsz);
-	let cany_top = cany - (Math.floor(max_player_h / 2) * pixsz);
-
-	map.draw(ctx, canx_left, cany_top, 0, 0, map.w, map.h, frame, false, draw_col);
+	this.map.draw(ctx, canx_left, cany_top, 0, 0, this.map.w, this.map.h, frame, false, draw_col);
 }
 
-PixPlayer.prototype.move = function(dir, undermap, frame) {
+PixPlayer.prototype.at = function(x, y, frame, undermap) {
+	// translate a world px coord to where we are
+	// get in relation to our center
+	let dx = x + max_player_w2 - Math.floor(this.x);
+	let ndx = dx + undermap.w;
+	let dy = y + max_player_h2 - Math.floor(this.y);
+	let ndy = dy + undermap.h;
+
+	dx = (Math.abs(dpx) < Math.abs(ndpx)) ? dpx : ndpx;
+	dy = (Math.abs(dpy) < Math.abs(ndpy)) ? dpy : ndpy;
+	
+	console.log("m", x, y, "o", dx, dy);
+
+	if (dx < 0 || dx >= this.map.w || dy < 0 || dy >= this.map.h) {
+		return PIX_BLANK;
+	}
+
+	return this.map.get(dx, dy, frame);
+}
+
+PixPlayer.prototype.move = function(dir, undermap, frame, players) {
 	let nexty = this.y;
 	let nextx = this.x;
 
 	switch (dir) {
 	case move_up:
-		nexty = this.y - move_amount;
+		nexty = ((this.y - move_amount) + undermap.h) % undermap.h;
 		break;
 	case move_right:
-		nextx = this.x + move_amount;
+		nextx = (this.x + move_amount) % undermap.w;
 		break;
 	case move_down:
-		nexty = this.y + move_amount;
+		nexty = (this.y + move_amount) % undermap.h;
 		break;
 	case move_left:
-		nextx = this.x - move_amount;
+		nextx = ((this.x - move_amount) + undermap.w) % undermap.w;
 		break;
 	}
-	this.last_dir = dir;
-
 
 	// first check collision
 	if (Math.floor(this.x) != Math.floor(nextx) || Math.floor(this.y) != Math.floor(nexty)) {
 		// loop through the current player frame and cooresponding map grid, check if 2 collision pieces overlap
 		let xoff;
 		let yoff;
-		let mapx = (Math.floor(nextx) - Math.floor(max_player_w / 2) + undermap.w) % undermap.w;
-		let mapy = (Math.floor(nexty) - Math.floor(max_player_h / 2) + undermap.h) % undermap.h;
-		let pmap = this.curMap()
+		let mapx = ((Math.floor(nextx) - max_player_w2) + undermap.w) % undermap.w;
+		let mapy = ((Math.floor(nexty) - max_player_h2) + undermap.h) % undermap.h;
 		for (yoff=0; yoff<max_player_h; yoff++) {
 			for (xoff=0; xoff<max_player_w; xoff++) {
-				if (pmap.getCol(xoff, yoff, frame)) {
+				if (this.map.getCol(xoff, yoff, frame)) {
 					// check the undermap
 					if (undermap.getCol((mapx+xoff) % undermap.w, (mapy+yoff) % undermap.h, frame)) {
 						// would hit a collision, don't move
 						return false;
+					}
+					// check other players
+					for (let k in players) {
+						if (players[k].at(mapx+xoff, mapy+yoff, frame, undermap) & PIX_COLLISION) {
+							return false;
+						}
 					}
 				}
 			}
@@ -213,42 +225,6 @@ PixPlayer.prototype.move = function(dir, undermap, frame) {
 	this.x = nextx;
 	this.y = nexty;
 	return true;
-}
-
-PixPlayer.prototype.curMap = function() {
-	let map;
-
-	switch (this.last_dir) {
-	case move_up:
-		if (this.moving) {
-			map = this.mov_up_map;
-		} else {
-			map = this.up_map;
-		}
-		break;
-	case move_right:
-		if (this.moving) {
-			map = this.mov_right_map;
-		} else {
-			map = this.right_map;
-		}
-		break;
-	case move_down:
-		if (this.moving) {
-			map = this.mov_down_map;
-		} else {
-			map = this.down_map;
-		}
-		break;
-	case move_left:
-		if (this.moving) {
-			map = this.mov_left_map;
-		} else {
-			map = this.left_map;
-		}
-		break;
-	}
-	return map;
 }
 
 // type PixGame
@@ -264,14 +240,14 @@ function PixGame(canvas) {
 	this.frame = 0; // counter for animation frames
 
 	this.player = new PixPlayer(0.0, 0.0);
-	this.other_players = [];
+	this.player.known_location = true;
+	this.other_players = {};
 
 	this.selected_x = 0;
 	this.selected_y = 0;
 	this.selected_color = DEF_COLOR;
 	this.selected_frames = allframes;
 	this.selected_player = false;
-	this.selected_playermaps = allpmaps;
 	this.selected_collision = false;
 
 	this.pensz = 1;
@@ -314,18 +290,27 @@ PixGame.prototype.draw = function() {
 	if (this.selected_player) {
 		this.ctx.fillStyle = "rgba(0,0,0,0.4)";
 		this.ctx.fillRect(0, 0, this.canvas.width, (this.can_h2 - Math.floor(max_player_h / 2)) * pixsz);
-		this.ctx.fillRect(0, 0, (this.can_w2 - Math.floor(max_player_w / 2)) * pixsz, this.canvas.height);
+		this.ctx.fillRect(0, 0, (this.can_w2 - max_player_w2) * pixsz, this.canvas.height);
 		this.ctx.fillRect(0, (this.can_h2 + Math.ceil(max_player_h / 2)) * pixsz, this.canvas.width, (this.can_h2 - Math.ceil(max_player_h / 2)) * pixsz);
 		this.ctx.fillRect((this.can_w2 + Math.ceil(max_player_w / 2)) * pixsz, 0, (this.can_w2 - Math.ceil(max_player_w / 2)) * pixsz, this.canvas.height);
+	}
+
+	// draw other players
+	if (!this.selected_player) {
+		let p_can;
+		for (var k in this.other_players) {
+			if (!this.other_players.hasOwnProperty(k)) {
+				continue;
+			}
+			p_can = this.px2can(this.other_players[k].x, this.other_players[k].y);
+			console.log("Drawing player", k, this.other_players[k].x, this.other_players[k].y, p_can);
+			this.other_players[k].draw(this.ctx, p_can.x, p_can.y, this.frame, false);
+		}
 	}
 
 	// draw main player
 	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_h2 * pixsz, this.frame, (this.selected_collision && this.selected_player));
 
-	// draw other players
-	// get the canvas coordinates for the player coordinates
-	let can_px;
-	let can_py;
 	// draw map top pixels
 }
 
@@ -343,7 +328,6 @@ PixGame.prototype.colorSel = function(erase=false) {
 	let fx;
 	let penoff = Math.floor(this.pensz/2);
 	if (this.selected_player) {
-		let pmaps = this.player.pmaps;
 		let i;
 		for (dy=0; dy<this.pensz; dy++) {
 			for (dx=0; dx<this.pensz; dx++) {
@@ -356,18 +340,16 @@ PixGame.prototype.colorSel = function(erase=false) {
 					continue;
 				}
 				
-				for (i=0; i<this.selected_playermaps.length; i++) {
-					if (this.selected_collision) {
-						pmaps[this.selected_playermaps[i]].setCol(fx, fy, erase, this.selected_frames);
-					} else {
-						pmaps[this.selected_playermaps[i]].set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
-					}
+				if (this.selected_collision) {
+					this.player.map.setCol(fx, fy, erase, this.selected_frames);
+				} else {
+					this.player.map.set(fx, fy, (erase)?PIX_BLANK:this.selected_color, this.selected_frames);
 				}
 				// send the message
 				if (this.selected_collision) {
-					comms_player_col_draw(fx, fy, this.selected_frames, this.selected_playermaps, (erase)?0:PIX_COLLISION);
+					comms_player_col_draw(fx, fy, this.selected_frames, (erase)?0:PIX_COLLISION);
 				} else {
-					comms_player_draw(fx, fy, this.selected_frames, this.selected_playermaps, (erase)?PIX_BLANK:this.selected_color);
+					comms_player_draw(fx, fy, this.selected_frames, (erase)?PIX_BLANK:this.selected_color);
 				}
 			}
 		}
@@ -394,7 +376,7 @@ PixGame.prototype.colorSel = function(erase=false) {
 PixGame.prototype.getColorSel = function() {
 	let c;
 	if (this.selected_player) {
-		let pmap = this.player.curMap();
+		let pmap = this.player.map;
 		if (this.selected_x < 0 || this.selected_y < 0 || this.selected_x >= pmap.w || this.selected_y >= pmap.h) {
 			return BACK_COLOR;
 		}
@@ -436,8 +418,8 @@ PixGame.prototype.setMouse = function(cord) {
 PixGame.prototype.can2px = function(canx, cany) {
 	let cord = {};
 	if (this.selected_player) {
-		cord.x = ((canx - (this.canvas.width / 2)) / pixsz) + Math.floor(max_player_w / 2);
-		cord.y = ((cany - (this.canvas.height / 2)) / pixsz) + Math.floor(max_player_h / 2);
+		cord.x = ((canx - (this.canvas.width / 2)) / pixsz) + max_player_w2;
+		cord.y = ((cany - (this.canvas.height / 2)) / pixsz) + max_player_h2;
 	} else {
 		cord.x = ((canx / pixsz) + (this.player.x - this.can_w2) + this.map.w) % this.map.w;
 		cord.y = ((cany / pixsz) + (this.player.y - this.can_h2) + this.map.h) % this.map.h;
@@ -448,22 +430,60 @@ PixGame.prototype.can2px = function(canx, cany) {
 PixGame.prototype.px2can = function(pxx, pxy) {
 	let can_cord = {};
 	if (this.selected_player) {
-		can_cord.x = ((pxx - Math.floor(max_player_w / 2)) * pixsz) + (this.canvas.width / 2);
-		can_cord.y = ((pxy - Math.floor(max_player_h / 2)) * pixsz) + (this.canvas.height / 2);
+		can_cord.x = ((pxx - max_player_w2) * pixsz) + (this.canvas.width / 2);
+		can_cord.y = ((pxy - max_player_h2) * pixsz) + (this.canvas.height / 2);
 	} else {
 		// px dist from player to select
-		dpx = pxx - this.player.x;
-		ndpx = pxx - (this.player.x + this.map.w);
+		let dpx = pxx - this.player.x;
+		let ndpx = pxx - (this.player.x + this.map.w);
+		while (ndpx < 0) {
+			ndpx += this.map.w;
+		}
 
-		dpy = pxy - this.player.y;
-		ndpy = pxy - (this.player.y + this.map.h);
+		let dpy = pxy - this.player.y;
+		let ndpy = pxy - (this.player.y + this.map.h);
+		while (ndpy < 0) {
+			ndpy += this.map.h;
+		}
 
 		dpx = (Math.abs(dpx) < Math.abs(ndpx)) ? dpx : ndpx;
 		dpy = (Math.abs(dpy) < Math.abs(ndpy)) ? dpy : ndpy;
+		
+		console.log("dp", dpx, dpy, "ndp", ndpx, ndpy, "choosen", dpx, dpy);
 
 		// canvas x = middle + (dpx * pixsz);
 		can_cord.x = (dpx + this.can_w2) * pixsz;
 		can_cord.y = (dpy + this.can_h2) * pixsz;
 	}
 	return can_cord;
+}
+
+PixGame.prototype.other_player_set = function(id, x, y, color, frames, fullwrite) {
+	// first check if the other player exists, if not create him
+	if (this.other_players[id] === undefined) {
+		this.other_players[id] = new PixPlayer(0.0, 0.0);
+	}
+
+	this.other_players[id].map.set(x, y, color, frames, fullwrite)
+}
+
+PixGame.prototype.other_player_setCol = function(id, x, y, erase, frames) {
+	// first check if the other player exists, if not create him
+	if (this.other_players[id] === undefined) {
+		this.other_players[id] = new PixPlayer(0.0, 0.0);
+	}
+
+	this.other_players[id].map.setCol(x, y, erase, frames)
+}
+
+PixGame.prototype.other_player_move = function(id, px, py) {
+	// first check if the other player exists, if not create him
+	if (this.other_players[id] === undefined) {
+		this.other_players[id] = new PixPlayer(0.0, 0.0);
+	}
+
+	this.other_players[id].x = px;
+	this.other_players[id].y = py;
+
+	this.other_players[id].known_location = true;
 }

@@ -24,8 +24,6 @@ let rpicker = document.getElementById("rinp");
 let gpicker = document.getElementById("ginp");
 let bpicker = document.getElementById("binp");
 let brushszinp = document.getElementById("brushsz");
-let sel_pmap = document.getElementById("select_pmap");
-let pframeg = document.getElementById("player_framegroup");
 let col_label = document.getElementById("collision_label");
 
 // important state vars
@@ -42,12 +40,18 @@ console.log("Creating game");
 let game = new PixGame(canvas);
 
 function pick_color(hex, hsv, rgb) {
-	cpick.style.backgroundColor = hex;
-	cgroup.style.backgroundColor = hex;
-	game.selected_color = PIX_ACTIVE | (rgb.r << 16) | (rgb.g << 8) | (rgb.b);
-	rpicker.value = rgb.r;
-	gpicker.value = rgb.g;
-	bpicker.value = rgb.b;
+	// reduce the color
+	let r = rgb.r & 0xf0;
+	let g = rgb.g & 0xf0;
+	let b = rgb.b & 0xf0;
+	let color = "rgb("+ (r | (r>>4)) +","+ (g | (g>>4)) +","+ (b | (b>>4)) +")";
+
+	cpick.style.backgroundColor = color;
+	cgroup.style.backgroundColor = color;
+	game.selected_color = PIX_ACTIVE | (r << 4) | (g) | (b >> 4);
+	rpicker.value = r >> 4;
+	gpicker.value = g >> 4;
+	bpicker.value = b >> 4;
 }
 
 let colorpicker = ColorPicker(
@@ -57,7 +61,7 @@ let colorpicker = ColorPicker(
 );
 
 function get_color() {
-	colorpicker.setRgb({r:rpicker.value, g:gpicker.value, b:bpicker.value});
+	colorpicker.setRgb({r:(rpicker.value << 4), g:(gpicker.value << 4), b:(bpicker.value << 4)});
 }
 
 let rcontrol_state = true;
@@ -84,112 +88,7 @@ function toggle_editcol() {
 }
 
 function toggle_editplayer() {
-	if (game.selected_player) {
-		Velocity(pframeg, {opacity: 0}, {duration: 500, complete: function(elements) {
-			elements[0].style.display = "none";
-		}});
-		Velocity(sel_pmap, {opacity: 0}, {duration: 500, complete: function(elements) {
-			elements[0].style.display = "none";
-		}});
-	} else {
-		Velocity(pframeg, {opacity: 1}, {duration: 500, begin: function(elements) {
-			elements[0].style.display = "block";
-		}});
-		Velocity(sel_pmap, {opacity: 1}, {duration: 500, begin: function(elements) {
-			elements[0].style.display = "block";
-		}});
-	}
 	game.selected_player = !game.selected_player;
-}
-
-function toggle_playermap(btn) {
-	let dir = 0;
-	switch (btn.id) {
-	case "p_up":
-		dir = pmap_up;
-		break;
-	case "p_down":
-		dir = pmap_down;
-		break;
-	case "p_left":
-		dir = pmap_left;
-		break;
-	case "p_right":
-		dir = pmap_right;
-		break;
-	case "p_m_up":
-		dir = pmap_mov_up;
-		break;
-	case "p_m_down":
-		dir = pmap_mov_down;
-		break;
-	case "p_m_left":
-		dir = pmap_mov_left;
-		break;
-	case "p_m_right":
-		dir = pmap_mov_right;
-		break;
-	}
-	console.log(btn.id, dir);
-
-	let selected = false;
-
-	let i=0;
-	for (; i<game.selected_playermaps.length; i++) {
-		if (dir == game.selected_playermaps[i]) {
-			selected = true;
-			break;
-		}
-	}
-
-
-	if (!selected) {
-		// add it to the selected
-		game.selected_playermaps.push(dir);
-		btn.style.backgroundColor = COLOR_SELECTED;
-	} else {
-		// unselect this one
-		game.selected_playermaps.splice(i, 1);
-		btn.style.backgroundColor = COLOR_NOT_SELECTED;
-	}
-}
-
-function change_playermap(mapname) {
-	switch (mapname) {
-	case "up":
-		game.player.moving = false;
-		game.player.last_dir = move_up;
-		break;
-	case "down":
-		game.player.moving = false;
-		game.player.last_dir = move_down;
-		break;
-	case "left":
-		game.player.moving = false;
-		game.player.last_dir = move_left;
-		break;
-	case "right":
-		game.player.moving = false;
-		game.player.last_dir = move_right;
-		break;
-	case "m_up":
-		game.player.moving = true;
-		game.player.last_dir = move_up;
-		break;
-	case "m_down":
-		game.player.moving = true;
-		game.player.last_dir = move_down;
-		break;
-	case "m_left":
-		game.player.moving = true;
-		game.player.last_dir = move_left;
-		break;
-	case "m_right":
-		game.player.moving = true;
-		game.player.last_dir = move_right;
-		break;
-	}
-	dirty_draw = true;
 }
 
 function toggle_frame(framebtn) {

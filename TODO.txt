@@ -3,6 +3,7 @@ Order of todo:
     - client side
     - figure out method of "blocking" updates to areas
     - parse array somehow or something, maybe compression
+    - passwords to use
 
 
 Other:

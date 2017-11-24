@@ -19,13 +19,15 @@ type msgctrl struct {
 	X  int     `json:"x"`
 	Y  int     `json:"y"`
 	F  []int   `json:"f"`
-	D  []int   `json:"d"`
 	C  int     `json:"c"`
+	S  bool    `json:"s"`
 }
 
 type client struct {
 	Out chan msgctrl
 	Id  int
+	Px  float64
+	Py  float64
 }
 
 // constants
@@ -114,8 +116,25 @@ func handleMessages() {
 			switch msg.T {
 			case MSG_MAP_PAINT:
 				update_map(msg.X, msg.Y, msg.C, msg.F)
+			case MSG_PLAYER_PAINT:
+				update_player(msg.Id, msg.X, msg.Y, msg.C, msg.F)
+			case MSG_PLAYER_MOVE:
+				clients_mux.Lock()
+				for _, c := range clients {
+					if c.Id == msg.Id {
+						c.Px = msg.Px
+						c.Py = msg.Py
+						break
+					}
+				}
+				clients_mux.Unlock()
 			case MSG_MAP_COL_PAINT:
-				//TODO
+				update_col_map(msg.X, msg.Y, msg.C, msg.F)
+			case MSG_PLAYER_COL_PAINT:
+				update_col_player(msg.Id, msg.X, msg.Y, msg.C, msg.F)
+			case MSG_PLAYER_REMOVE:
+				// remove the player map from the state
+				clear_state(msg.Id)
 			}
 
 			clients_mux.Lock()
@@ -141,12 +160,19 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 
 	// create the channel for this client
 	var c client
+	c.Px = 0.0
+	c.Py = 0.0
 	c.Out = make(chan msgctrl)
 	// add it to the global slice
 
 	clients_mux.Lock()
 	c.Id = player_id_counter
 	player_id_counter++
+	if player_id_counter == -1 {
+		// -1 is only for the server
+		log.Printf("WARNING! Looped all the way around! Hope player 0 isn't still around\n")
+		player_id_counter++
+	}
 	clients = append(clients, &c)
 	clients_mux.Unlock()
 
@@ -222,4 +248,9 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	log.Printf("closed connection from %s\n", r.RemoteAddr)
 
 	// TODO send out a player remove message to everyone
+	msgin <- msgctrl{
+		Id: c.Id,
+		T:  MSG_PLAYER_REMOVE,
+	}
+
 }

@@ -19,19 +19,19 @@ function comms_init(game) {
 		console.log(msg_obj);
 		switch (msg_obj.t) {
 		case MSG_MAP_PAINT:
-			game_obj.map.set(msg_obj.x, msg_obj.y, msg_obj.c, msg_obj.f);
+			game_obj.map.set(msg_obj.x, msg_obj.y, msg_obj.c, msg_obj.f, msg_obj.s);
 			break;
 		case MSG_PLAYER_PAINT:
-			//TODO
+			game_obj.other_player_set(msg_obj.id, msg_obj.x, msg_obj.y, msg_obj.c, msg_obj.f, msg_obj.s);
 			break;
 		case MSG_PLAYER_MOVE:
-			//TODO
+			game_obj.other_player_move(msg_obj.id, msg_obj.px, msg_obj.py);
 			break;
 		case MSG_MAP_COL_PAINT:
 			game_obj.map.setCol(msg_obj.x, msg_obj.y, (msg_obj.c == 0), msg_obj.f); 
 			break;
 		case MSG_PLAYER_COL_PAINT:
-			//TODO
+			game_obj.other_player_setCol(msg_obj.id, msg_obj.x, msg_obj.y, (msg_obj.c == 0), msg_obj.f);
 			break;
 		case MSG_PLAYER_REMOVE:
 			//TODO
@@ -85,14 +85,14 @@ function comms_map_col_draw(x, y, f, c) {
 	return comms_ws_send(JSON.stringify({t: MSG_MAP_COL_PAINT, x: x, y: y, f: f, c: c}));
 }
 
-function comms_player_draw(x, y, f, d, c) {
+function comms_player_draw(x, y, f, c) {
 	// player map cell x, y, frame, direction, and color
 	// frame and direction are arrays of numbers
-	return comms_ws_send(JSON.stringify({t: MSG_PLAYER_PAINT, x: x, y: y, f: f, d: d, c: c}));
+	return comms_ws_send(JSON.stringify({t: MSG_PLAYER_PAINT, x: x, y: y, f: f, c: c}));
 }
 
-function comms_player_col_draw(x, y, f, d, c) {
+function comms_player_col_draw(x, y, f, c) {
 	// player map cell x, y, frame, direction, and color
 	// frame and direction are arrays of numbers
-	return comms_ws_send(JSON.stringify({t: MSG_PLAYER_COL_PAINT, x: x, y: y, f: f, d: d, c: c}));
+	return comms_ws_send(JSON.stringify({t: MSG_PLAYER_COL_PAINT, x: x, y: y, f: f, c: c}));
 }
