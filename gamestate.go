@@ -3,21 +3,21 @@ package main
 import ()
 
 // constants
-const MAPW int = 0x1234
-const MAPH int = 0x1234
+const MAPW int = 0x750
+const MAPH int = 0x750
 const FRAMES int = 12
 const FRAME_SZ int = MAPW * MAPH
 const BLOCK_SIZE int = 300
-const PIX_ACTIVE int = 0x08000000
-const PIX_COLLISION int = 0x01000000
-const PIX_NOT_COLLISION int = 0xffffffff ^ PIX_COLLISION
+const PIX_ACTIVE uint32 = 0x08000000
+const PIX_COLLISION uint32 = 0x01000000
+const PIX_NOT_COLLISION uint32 = 0xffffffff ^ PIX_COLLISION
 
 // global state variables
-var mainmap []int
+var mainmap []uint32
 
 // functions
 func state_init() bool {
-	mainmap = make([]int, MAPW*MAPH*FRAMES)
+	mainmap = make([]uint32, MAPW*MAPH*FRAMES)
 	return true
 }
 
@@ -41,7 +41,7 @@ func xyftoi(x, y, f int) int {
 
 func send_updates(c client) {
 	// TODO really, we should just send stuff in the block and adjacent blocks
-	var color int
+	var color uint32
 	for i := 0; i < len(mainmap); i++ {
 		color = mainmap[i]
 		if (color & PIX_ACTIVE) != 0 {
@@ -50,7 +50,7 @@ func send_updates(c client) {
 				X:  itox(i),
 				Y:  itoy(i),
 				F:  itof(i),
-				C:  color,
+				C:  int(color),
 			}
 		}
 	}
@@ -58,7 +58,7 @@ func send_updates(c client) {
 
 func update_map(x, y int, color int, frames []int) {
 	for _, f := range frames {
-		mainmap[xyftoi(x, y, f)] = color
+		mainmap[xyftoi(x, y, f)] = uint32(color)
 	}
 }
 

@@ -1,8 +1,8 @@
 // this file contains the game code, including drawing and networking
 
 // default values
-const mapw = 0x1234;
-const maph = 0x1234;
+const mapw = 0x750;
+const maph = 0x750;
 
 const aniframes = 12;
 const allframes = [0,1,2,3,4,5,6,7,8,9,10,11];
