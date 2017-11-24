@@ -10,12 +10,32 @@ var comms_ready = false;
 var comms_closed = true;
 var comms_queue = [];
 
-function comms_init(map_callback, player_paint_callback, player_move_callback, player_remove_callback) {
+function comms_init(map_callback) {
 	ws = new WebSocket("ws://"+ location.host + "/ws");
 
 	ws.onmessage = function(msg_evt) {
-		msg_obj = JSON.parse(msg_obj.data);
+		msg_obj = JSON.parse(msg_evt.data);
 		console.log(msg_obj);
+		switch (msg_obj.t) {
+		case MSG_MAP_PAINT:
+			map_callback(msg_obj.x, msg_obj.y, msg_obj.f, msg_obj.c);
+			break;
+		case MSG_PLAYER_PAINT:
+			//TODO
+			break;
+		case MSG_PLAYER_MOVE:
+			//TODO
+			break;
+		case MSG_MAP_COL_PAINT:
+			//TODO
+			break;
+		case MSG_PLAYER_COL_PAINT:
+			//TODO
+			break;
+		case MSG_PLAYER_REMOVE:
+			//TODO
+			break;
+		}
 	};
 
 	ws.onopen = function(opn_evt) {

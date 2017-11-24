@@ -151,8 +151,13 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			log.Printf("%d sending msg: %#v\n", c.Id, msg)
-			// ws.WriteMessage(1, jsonmsg)
+			jsonmsg, err := json.Marshal(msg)
+			if err != nil {
+				break
+			}
+			ws.WriteMessage(1, jsonmsg)
 		}
+		log.Printf("%d is no longer sending\n", c.Id)
 	}()
 
 	// ReadMessage loop
