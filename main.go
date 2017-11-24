@@ -24,8 +24,9 @@ type msgctrl struct {
 }
 
 type client struct {
-	Out chan msgctrl
-	Id  int
+	Out   chan msgctrl
+	Id    int
+	Block int
 }
 
 // constants
@@ -65,24 +66,28 @@ func main() {
 	var path string
 
 	// find our path to serve
-	// first check where the executable is
-	path, err = os.Executable()
-	if err != nil {
-		log.Fatal("Err while getting executable path. err: %v\n", err)
-	}
-	path = filepath.Dir(path) + "/site"
-	_, err = os.Stat(path)
-	if err != nil {
-		// check the current working directory
-		path, err = os.Getwd()
+	if len(os.Args) > 1 {
+		path = os.Args[1]
+	} else {
+		// second check where the executable is
+		path, err = os.Executable()
 		if err != nil {
-			log.Fatal("Err while getting working directory. err: %v\n", err)
+			log.Fatal("Err while getting executable path. err: %v\n", err)
 		}
-
-		path = path + "/site"
+		path = filepath.Dir(path) + "/site"
 		_, err = os.Stat(path)
 		if err != nil {
-			log.Fatal("Could not find path to site! err: %v\n", err)
+			// check the current working directory
+			path, err = os.Getwd()
+			if err != nil {
+				log.Fatal("Err while getting working directory. err: %v\n", err)
+			}
+
+			path = path + "/site"
+			_, err = os.Stat(path)
+			if err != nil {
+				log.Fatal("Could not find path to site! err: %v\n", err)
+			}
 		}
 	}
 
@@ -106,7 +111,13 @@ func handleMessages() {
 		select {
 		case msg = <-msgin:
 			// TODO process change and send the change to everyone
-			log.Printf("Message : %#v\n", msg)
+			switch msg.T {
+			case MSG_MAP_PAINT:
+				//TODO
+			case MSG_MAP_COL_PAINT:
+				//TODO
+			}
+
 			clients_mux.Lock()
 			for _, c := range clients {
 				if c.Id != msg.Id {
@@ -150,7 +161,6 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				break
 			}
-			log.Printf("%d sending msg: %#v\n", c.Id, msg)
 			jsonmsg, err := json.Marshal(msg)
 			if err != nil {
 				break

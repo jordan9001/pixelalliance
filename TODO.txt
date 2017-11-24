@@ -1,7 +1,7 @@
 Order of todo:
-    - server backbone
     - message types
     - client side
+    - figure out method of "blocking" updates to areas
 
 
 Other:

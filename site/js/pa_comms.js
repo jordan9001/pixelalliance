@@ -10,15 +10,16 @@ var comms_ready = false;
 var comms_closed = true;
 var comms_queue = [];
 
-function comms_init(map_callback) {
+function comms_init(game) {
 	ws = new WebSocket("ws://"+ location.host + "/ws");
 
+	var game_obj = game;
 	ws.onmessage = function(msg_evt) {
 		msg_obj = JSON.parse(msg_evt.data);
 		console.log(msg_obj);
 		switch (msg_obj.t) {
 		case MSG_MAP_PAINT:
-			map_callback(msg_obj.x, msg_obj.y, msg_obj.f, msg_obj.c);
+			game_obj.map.set(msg_obj.x, msg_obj.y, msg_obj.c, msg_obj.f);
 			break;
 		case MSG_PLAYER_PAINT:
 			//TODO
@@ -27,7 +28,7 @@ function comms_init(map_callback) {
 			//TODO
 			break;
 		case MSG_MAP_COL_PAINT:
-			//TODO
+			game_obj.map.setCol(msg_obj.x, msg_obj.y, (msg_obj.c == 0), msg_obj.f); 
 			break;
 		case MSG_PLAYER_COL_PAINT:
 			//TODO

@@ -277,7 +277,7 @@ function PixGame(canvas) {
 	this.pensz = 1;
 
 	// set up connection
-	comms_init(this.remote_map_draw);
+	comms_init(this);
 }
 
 PixGame.prototype.draw = function() {
@@ -466,8 +466,4 @@ PixGame.prototype.px2can = function(pxx, pxy) {
 		can_cord.y = (dpy + this.can_h2) * pixsz;
 	}
 	return can_cord;
-}
-
-PixGame.prototype.remote_map_draw = function(x, y, frames, color) {
-
 }
