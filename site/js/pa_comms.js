@@ -16,7 +16,6 @@ function comms_init(game) {
 	var game_obj = game;
 	ws.onmessage = function(msg_evt) {
 		msg_obj = JSON.parse(msg_evt.data);
-		console.log(msg_obj);
 		switch (msg_obj.t) {
 		case MSG_MAP_PAINT:
 			game_obj.map.set(msg_obj.x, msg_obj.y, msg_obj.c, msg_obj.f, msg_obj.s);

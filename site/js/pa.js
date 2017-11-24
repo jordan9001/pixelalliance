@@ -161,14 +161,20 @@ PixPlayer.prototype.at = function(x, y, frame, undermap) {
 	// translate a world px coord to where we are
 	// get in relation to our center
 	let dx = x + max_player_w2 - Math.floor(this.x);
-	let ndx = dx + undermap.w;
+	let ndx = dx - undermap.w;
 	let dy = y + max_player_h2 - Math.floor(this.y);
-	let ndy = dy + undermap.h;
+	let ndy = dy - undermap.h;
 
-	dx = (Math.abs(dpx) < Math.abs(ndpx)) ? dpx : ndpx;
-	dy = (Math.abs(dpy) < Math.abs(ndpy)) ? dpy : ndpy;
-	
-	console.log("m", x, y, "o", dx, dy);
+	if (ndx <= (0-undermap.w)) {
+		ndx += (undermap.w * 2);
+	}
+
+	if (ndy <= 0-undermap.h) {
+		ndy += (undermap.h * 2);
+	}
+
+	dx = (Math.abs(dx) < Math.abs(ndx)) ? dx : ndx;
+	dy = (Math.abs(dy) < Math.abs(ndy)) ? dy : ndy;
 
 	if (dx < 0 || dx >= this.map.w || dy < 0 || dy >= this.map.h) {
 		return PIX_BLANK;
@@ -303,7 +309,6 @@ PixGame.prototype.draw = function() {
 				continue;
 			}
 			p_can = this.px2can(this.other_players[k].x, this.other_players[k].y);
-			console.log("Drawing player", k, this.other_players[k].x, this.other_players[k].y, p_can);
 			this.other_players[k].draw(this.ctx, p_can.x, p_can.y, this.frame, false);
 		}
 	}
@@ -391,7 +396,7 @@ PixGame.prototype.getColorSel = function() {
 }
 
 PixGame.prototype.move = function(direction) {
-	this.player.move(direction, this.map, this.frame);
+	this.player.move(direction, this.map, this.frame, this.other_players);
 	// send a message
 	comms_move(this.player.x, this.player.y);
 }
@@ -436,20 +441,22 @@ PixGame.prototype.px2can = function(pxx, pxy) {
 		// px dist from player to select
 		let dpx = pxx - this.player.x;
 		let ndpx = pxx - (this.player.x + this.map.w);
-		while (ndpx < 0) {
-			ndpx += this.map.w;
-		}
+		//let ndpx = dpx + this.map.w;
 
 		let dpy = pxy - this.player.y;
 		let ndpy = pxy - (this.player.y + this.map.h);
-		while (ndpy < 0) {
-			ndpy += this.map.h;
+		//let ndpy = dpy + this.map.h;
+		
+		if (ndpx <= (0-this.map.w)) {
+			ndpx += (this.map.w * 2);
+		}
+
+		if (ndpy <= 0-this.map.h) {
+			ndpy += (this.map.h * 2);
 		}
 
 		dpx = (Math.abs(dpx) < Math.abs(ndpx)) ? dpx : ndpx;
 		dpy = (Math.abs(dpy) < Math.abs(ndpy)) ? dpy : ndpy;
-		
-		console.log("dp", dpx, dpy, "ndp", ndpx, ndpy, "choosen", dpx, dpy);
 
 		// canvas x = middle + (dpx * pixsz);
 		can_cord.x = (dpx + this.can_w2) * pixsz;
