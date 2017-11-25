@@ -13,13 +13,13 @@ const move_down = 2;
 const move_left = 3;
 const move_amount = 0.50;
 
-const max_player_w = 12;
-const max_player_h = 12;
+const max_player_w = 18;
+const max_player_h = 18;
 const pmap_size = max_player_w * max_player_h * aniframes;
 const max_player_w2 = Math.floor(max_player_w / 2);
 const max_player_h2 = Math.floor(max_player_h / 2);
 
-const pixsz = 15;
+const pixsz = 12;
 const COL_OFF = 3;
 const COL_OFF2 = 6;
 
@@ -266,6 +266,10 @@ function PixGame(canvas) {
 	let pmapstr = window.localStorage.getItem("player_map");
 	if (pmapstr != null) {
 		let pmap = JSON.parse(pmapstr);
+		if (pmap[pmap_size] != undefined || pmap[pmap_size-1] == undefined) {
+			console.log("Strange player map");
+			window.localStorage.clear();
+		}
 		for (let i=0; i<pmap_size; i++) {
 			this.player.map.map[i] = pmap[i];
 		}

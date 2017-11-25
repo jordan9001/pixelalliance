@@ -14,6 +14,18 @@ const akc = 65;
 const lekc = 37;
 const qkc = 81;
 const ekc = 69;
+const one_kc = 49;
+const two_kc = 50;
+const three_kc = 51;
+const four_kc = 52;
+const five_kc = 53;
+const six_kc = 54;
+const seven_kc = 55;
+const eight_kc = 56;
+const nine_kc = 57;
+const ten_kc = 48;
+const eleven_kc = 189;
+const tweleve_kc = 187;
 
 // important elements
 let rcontrol = document.getElementById("rightctr"); 
@@ -29,6 +41,7 @@ let brushszinp = document.getElementById("brushsz");
 let eplayer = document.getElementById("edit_player");
 let ecol = document.getElementById("edit_collision");
 let ibox = document.getElementById('infobox');
+let fselector = document.getElementById('aniframe');
 
 function showinfo() {
     ibox.style.display = "block";
@@ -117,7 +130,16 @@ function toggle_editplayer() {
 
 function toggle_frame(framebtn) {
 	let selected = false;
-	let frameid = parseInt(framebtn.id.substr(4), 16);
+	let frameid = parseInt(framebtn.id.substr(4), 10);
+
+	selected = toggle_frame_num(frameid);
+	return selected;
+}
+
+function toggle_frame_num(frameid) {
+	frameid -= 1;
+
+	let selected = false;
 	// check if it is selected
 	let i=0;
 	for (; i<game.selected_frames.length; i++) {
@@ -127,15 +149,19 @@ function toggle_frame(framebtn) {
 		}
 	}
 
+	framebtn = document.getElementById("fsel" + (1 + +(frameid)));
+
 	if (!selected) {
 		// select this one now
-		game.selected_frames.push(frameid);
 		framebtn.style.backgroundColor = COLOR_SELECTED;
+		game.selected_frames.push(frameid);
 	} else {
 		// unselect this one
-		game.selected_frames.splice(i, 1);
 		framebtn.style.backgroundColor = COLOR_NOT_SELECTED;
+		game.selected_frames.splice(i, 1);
 	}
+
+	return (!selected);
 }
 
 let do_animation = true;
@@ -149,6 +175,9 @@ function toggle_animation(btnel) {
 }
 
 function change_frame(val) {
+	if (val > 12 || val < 1) {
+		return;
+	}
 	game.frame = val-1;
 	dirty_draw = true;
 }
@@ -312,6 +341,66 @@ document.addEventListener('keydown', function(evt) {
 	case ekc:
 		edown = true;
 		break;
+	case one_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(1)
+		}
+		break;
+	case two_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(2)
+		}
+		break;
+	case three_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(3)
+		}
+		break;
+	case four_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(4)
+		}
+		break;
+	case five_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(5)
+		}
+		break;
+	case six_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(6)
+		}
+		break;
+	case seven_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(7)
+		}
+		break;
+	case eight_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(8)
+		}
+		break;
+	case nine_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(9)
+		}
+		break;
+	case ten_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(10)
+		}
+		break;
+	case eleven_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(11)
+		}
+		break;
+	case tweleve_kc:
+		if (evt.target != fselector) {
+			toggle_frame_num(12)
+		}
+		break;
 	}
 
 	if (movekey) {
@@ -344,7 +433,7 @@ document.addEventListener('keyup', function(evt) {
 		movekey = true;
 		break;
 	case ekc:
-		edown = true;
+		edown = false;
 		break;
 	}
 	

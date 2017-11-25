@@ -25,8 +25,8 @@ const PIX_ACTIVE mapint = 0x4000
 const PIX_LOCKED mapint = 0x2000
 const PIX_COLLISION mapint = 0x1000
 const PIX_NOT_COLLISION = 0xffff ^ PIX_COLLISION
-const PLAYER_W int = 12
-const PLAYER_H int = 12
+const PLAYER_W int = 18
+const PLAYER_H int = 18
 const PFRAME_SZ int = PLAYER_W * PLAYER_H
 const PMAP_DIRS int = 8
 const PMAP_SIZE int = PLAYER_W * PLAYER_H * FRAMES
@@ -52,6 +52,7 @@ func state_init(filepath string) bool {
 
 	f, err = os.OpenFile(filepath, os.O_RDWR, 0644)
 	if err != nil {
+		log.Printf("Could not open file %s. err: %v\n", filepath, err);
 		f, err = setup_file(filepath)
 		if err != nil {
 			log.Fatalf("Could not create file for use! err: %v\n", err)
