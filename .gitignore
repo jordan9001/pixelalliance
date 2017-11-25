@@ -2,3 +2,5 @@
 *.crt
 *.secret
 main
+*.map
+*.log
