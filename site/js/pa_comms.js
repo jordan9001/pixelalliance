@@ -10,6 +10,8 @@ var comms_ready = false;
 var comms_closed = true;
 var comms_queue = [];
 
+var alert_box = document.getElementById("alertbox");
+
 function comms_init(game) {
 	ws = new WebSocket("ws://"+ location.host + "/ws");
 
@@ -51,6 +53,16 @@ function comms_init(game) {
 		comms_closed = true;
 		comms_ready = false;
 		console.log("ws error!", err_evt);
+		alert_box.style.display = "block";
+		alert_box.innerText = "Connection Lost";
+	};
+
+	ws.onclose = function(close_evt) {
+		comms_closed = true;
+		comms_ready = false;
+		console.log("ws close!", close_evt);
+		alert_box.style.display = "block";
+		alert_box.innerText = "Connection Lost";
 	};
 
 	comms_closed = false;

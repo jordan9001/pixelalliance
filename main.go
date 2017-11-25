@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sync"
+	"time"
 )
 
 // types
@@ -32,6 +32,7 @@ type client struct {
 
 // constants
 const PORT string = ":8145"
+const TIMEOUTTIME time.Duration = 15 * time.Second
 
 // message types
 const (
@@ -60,41 +61,34 @@ func init() {
 	clients = make([]*client, 0, 8)
 	// set up our inward channel
 	msgin = make(chan msgctrl)
-	state_init()
 }
 
 func main() {
-	var err error
 	var path string
+	var statepath string
 
 	// find our path to serve
-	if len(os.Args) > 1 {
+	if len(os.Args) > 2 {
 		path = os.Args[1]
+		statepath = os.Args[2]
 	} else {
-		// second check where the executable is
-		path, err = os.Executable()
-		if err != nil {
-			log.Fatal("Err while getting executable path. err: %v\n", err)
-		}
-		path = filepath.Dir(path) + "/site"
-		_, err = os.Stat(path)
-		if err != nil {
-			// check the current working directory
-			path, err = os.Getwd()
-			if err != nil {
-				log.Fatal("Err while getting working directory. err: %v\n", err)
-			}
+		log.Fatalf("Usage: %s /path/to/site /path/to/statefile [logfile]\n", os.Args[0])
+	}
 
-			path = path + "/site"
-			_, err = os.Stat(path)
-			if err != nil {
-				log.Fatal("Could not find path to site! err: %v\n", err)
-			}
+	if len(os.Args) > 3 {
+		f, err := os.OpenFile(os.Args[3], os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal(err)
 		}
+		defer f.Close()
+
+		log.SetOutput(f)
 	}
 
 	log.Printf("Path = %s\n", path)
 	log.Printf("Serving on port %s\n", PORT)
+
+	state_init(statepath)
 
 	// handle messages
 	go handleMessages()
@@ -156,7 +150,19 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	log.Printf("connection from %s\n", r.RemoteAddr)
+	log.Printf("Connection from %s\n", r.RemoteAddr)
+	log.Printf("There are %d connections\n", len(clients))
+
+	// start sending PING messages
+	go func() {
+		for {
+			err := ws.WriteMessage(websocket.PingMessage, []byte("keepalive"))
+			if err != nil {
+				return
+			}
+			time.Sleep(TIMEOUTTIME)
+		}
+	}()
 
 	// create the channel for this client
 	var c client
@@ -219,6 +225,10 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 			msg.Id = c.Id
 			// send it for processing
 			msgin <- msg
+		case websocket.PingMessage:
+			log.Printf("Ping\n")
+		case websocket.PongMessage:
+			log.Printf("Pong\n")
 		case websocket.CloseMessage:
 			// one way to end connection
 			break

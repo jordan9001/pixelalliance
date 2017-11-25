@@ -1,12 +1,10 @@
 Order of todo:
-    - message types
-    - client side
-    - figure out method of "blocking" updates to areas
-    - parse array somehow or something, maybe compression
-    - passwords to use
-
+	localStorage for player map
 
 Other:
+	look into connection timeout more
+	top
+	locked
 	Good scrolling
 	Chat
 	Better controls for collisions/top/layers/colors

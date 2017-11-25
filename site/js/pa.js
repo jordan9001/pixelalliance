@@ -415,8 +415,10 @@ PixGame.prototype.setMouse = function(cord) {
 	}
 
 	this.selected_x = Math.floor(cord.x);
-	this.selected_y = Math.floor(cord.y);
-	
+	this.selected_y = Math.floor(cord.y);	
+
+	console.log(this.selected_x, this.selected_y);
+
 	return dirty;
 }
 

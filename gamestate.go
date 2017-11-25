@@ -1,11 +1,19 @@
 package main
 
 import (
+	"encoding/binary"
+	"errors"
+	"log"
+	"os"
 	"sync"
 )
 
 // types
 type mapint uint16
+type fchange struct {
+	I int
+	C mapint
+}
 
 // constants
 const MAPW int = 0x900
@@ -22,19 +30,103 @@ const PLAYER_H int = 12
 const PFRAME_SZ int = PLAYER_W * PLAYER_H
 const PMAP_DIRS int = 8
 const PMAP_SIZE int = PLAYER_W * PLAYER_H * FRAMES
+const FILEBUFAMOUNT int = 32
+const SIZEOFMAPINT int = 2
 
 // global state variables
 var mainmap []mapint
 var pmap map[int][]mapint // player stuff by Id
 var pmap_mux = &sync.Mutex{}
+var filech chan fchange
 
 // functions
-func state_init() bool {
+func state_init(filepath string) bool {
 	mainmap = make([]mapint, MAPW*MAPH*FRAMES)
 	pmap_mux.Lock()
 	pmap = make(map[int][]mapint)
 	pmap_mux.Unlock()
+
+	// check if there is an existing file
+	var f *os.File
+	var err error
+
+	f, err = os.OpenFile(filepath, os.O_RDWR, 0644)
+	if err != nil {
+		f, err = setup_file(filepath)
+		if err != nil {
+			log.Fatalf("Could not create file for use! err: %v\n", err)
+		}
+		log.Printf("Created state file %q\n", filepath)
+	} else {
+		log.Printf("Found state file %q\n", filepath)
+		err = load_state(f)
+		if err != nil {
+			log.Fatalf("Could not load state from file! err: %v\n", err)
+		}
+	}
+
+	filech = make(chan fchange, FILEBUFAMOUNT)
+	go file_persist(f)
+
 	return true
+}
+
+func setup_file(filepath string) (*os.File, error) {
+	f, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	err = f.Truncate(int64(MAPW * MAPH * FRAMES * SIZEOFMAPINT))
+	if err != nil {
+		return nil, err
+	}
+
+	//truncate makes all zeros, at least on linux, so that is nice
+	// we are all ready
+
+	return f, nil
+}
+
+func load_state(f *os.File) error {
+	fi, err := f.Stat()
+	if err != nil {
+		return err
+	}
+
+	if fi.Size() != int64(MAPW*MAPH*FRAMES*SIZEOFMAPINT) {
+		return errors.New("unexpeceted File Size\n")
+	}
+
+	// we could do the unsafe c way here, but we will see if we can just get away with this for now
+
+	var buf []byte = make([]byte, MAPW*MAPH*FRAMES*SIZEOFMAPINT)
+	_, err = f.ReadAt(buf, 0)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < (len(buf) / SIZEOFMAPINT); i++ {
+		mainmap[i] = mapint(binary.LittleEndian.Uint16(buf[i*SIZEOFMAPINT:]))
+	}
+	return nil
+}
+
+func file_persist(f *os.File) {
+	var ok bool
+	var change fchange
+	var buf []byte
+	buf = make([]byte, SIZEOFMAPINT)
+	for {
+		change, ok = <-filech
+		if !ok {
+			return
+		}
+		binary.LittleEndian.PutUint16(buf, uint16(change.C))
+		_, err := f.WriteAt(buf, int64(change.I*SIZEOFMAPINT))
+		if err != nil {
+			return
+		}
+	}
 }
 
 func pitox(i int) int {
@@ -137,18 +229,27 @@ func clear_state(id int) {
 }
 
 func update_map(x, y int, color int, frames []int) {
+	var i int
+	var c mapint = mapint(color)
 	for _, f := range frames {
-		mainmap[xyftoi(x, y, f)] = mapint(color)
+		i = xyftoi(x, y, f)
+		mainmap[i] = c
+		filech <- fchange{I: i, C: c}
 	}
 }
 
 func update_col_map(x, y int, color int, frames []int) {
+	var i int
+	var c mapint
 	for _, f := range frames {
+		i = xyftoi(x, y, f)
 		if color != 0 {
-			mainmap[xyftoi(x, y, f)] |= PIX_COLLISION
+			c = mainmap[i] | PIX_COLLISION
 		} else {
-			mainmap[xyftoi(x, y, f)] &= PIX_NOT_COLLISION
+			c = mainmap[i] & PIX_NOT_COLLISION
 		}
+		mainmap[i] = c
+		filech <- fchange{I: i, C: c}
 	}
 }
 
