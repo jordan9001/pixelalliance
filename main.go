@@ -87,6 +87,7 @@ func main() {
 		log.SetOutput(f)
 	}
 
+	log.Printf("\n\n\nStarting Server...\n\n");
 	log.Printf("Path = %s\n", path)
 	log.Printf("Serving on port %s\n", PORT)
 
@@ -222,7 +223,7 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 			// unmarshall the message
 			err = json.Unmarshal(p, &msg)
 			if err != nil {
-				log.Printf("unmarshal err: %v\n", err)
+				log.Printf("unmarshal err for %d: %v\n", c.Id, err)
 				break
 			}
 			// add the player id to it
@@ -234,6 +235,7 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 		case websocket.PongMessage:
 			log.Printf("Pong\n")
 		case websocket.CloseMessage:
+			log.Printf("Got a close message from %d\n", c.Id)
 			// one way to end connection
 			break
 		}
