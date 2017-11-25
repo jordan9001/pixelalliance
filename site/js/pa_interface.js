@@ -217,9 +217,12 @@ canvas.addEventListener('mousedown', function(evt) {
 		// middle mouse
 		// do eyedropper
 		let c = game.getColorSel();
-		let r = (c & 0xff0000) >> 16;
-		let g = (c & 0xff00) >> 8;
-		let b = (c & 0xff);
+		let r = (c & 0xf00) >> 4;
+		let g = (c & 0xf0);
+		let b = (c & 0xf) << 4;
+		r = r | (r >> 4);
+		g = g | (g >> 4);
+		b = b | (b >> 4);
 		colorpicker.setRgb({r:r, g:g, b:b});
 	}
 	dirty_draw = true;

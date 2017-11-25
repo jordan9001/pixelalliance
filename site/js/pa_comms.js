@@ -33,9 +33,10 @@ function comms_init(game) {
 			game_obj.other_player_setCol(msg_obj.id, msg_obj.x, msg_obj.y, (msg_obj.c == 0), msg_obj.f);
 			break;
 		case MSG_PLAYER_REMOVE:
-			//TODO
+			game_obj.other_players[msg_obj.id] = undefined;
 			break;
 		}
+		dirty_draw = true;
 	};
 
 	ws.onopen = function(opn_evt) {
