@@ -204,19 +204,13 @@ func send_updates(c client) {
 	// Send player maps states
 	pmap_mux.Lock()
 	for id, pm := range pmap {
-		for i := 0; i < len(pm); i++ {
-			color = pm[i]
-			if ((color & PIX_ACTIVE) != 0) || ((color & PIX_COLLISION) != 0) {
-				c.Out <- msgctrl{
-					Id: id,
-					T:  MSG_PLAYER_PAINT,
-					X:  pitox(i),
-					Y:  pitoy(i),
-					F:  pitof(i),
-					C:  int(color),
-					S:  true,
-				}
-			}
+		if c.Id == id {
+			continue
+		}
+		c.Out <- msgctrl{
+			Id: id,
+			T:  MSG_PLAYER_MAP,
+			M:  pm,
 		}
 	}
 	pmap_mux.Unlock()
@@ -270,5 +264,15 @@ func update_col_player(id, x, y int, color int, frames []int) {
 			pmap[id][pxyftoi(x, y, f)] &= PIX_NOT_COLLISION
 		}
 	}
+	pmap_mux.Unlock()
+}
+
+func update_player_map(id int, m []mapint) {
+	if len(m) != PMAP_SIZE {
+		log.Printf("Got Strange pmap\n")
+		return
+	}
+	pmap_mux.Lock()
+	pmap[id] = m
 	pmap_mux.Unlock()
 }

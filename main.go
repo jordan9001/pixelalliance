@@ -12,15 +12,16 @@ import (
 
 // types
 type msgctrl struct {
-	Id int     `json:"id"`
-	T  int     `json:"t"`
-	Px float64 `json:"px"`
-	Py float64 `json:"py"`
-	X  int     `json:"x"`
-	Y  int     `json:"y"`
-	F  []int   `json:"f"`
-	C  int     `json:"c"`
-	S  bool    `json:"s"`
+	Id int      `json:"id"`
+	T  int      `json:"t"`
+	Px float64  `json:"px"`
+	Py float64  `json:"py"`
+	X  int      `json:"x"`
+	Y  int      `json:"y"`
+	F  []int    `json:"f"`
+	C  int      `json:"c"`
+	S  bool     `json:"s"`
+	M  []mapint `json:"m"`
 }
 
 type client struct {
@@ -42,6 +43,7 @@ const (
 	MSG_MAP_COL_PAINT    = 3
 	MSG_PLAYER_COL_PAINT = 4
 	MSG_PLAYER_REMOVE    = 5
+	MSG_PLAYER_MAP       = 6
 )
 
 // global vars
@@ -129,6 +131,8 @@ func handleMessages() {
 			case MSG_PLAYER_REMOVE:
 				// remove the player map from the state
 				clear_state(msg.Id)
+			case MSG_PLAYER_MAP:
+				update_player_map(msg.Id, msg.M)
 			}
 
 			clients_mux.Lock()
@@ -149,9 +153,6 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer ws.Close()
-
-	log.Printf("Connection from %s\n", r.RemoteAddr)
-	log.Printf("There are %d connections\n", len(clients))
 
 	// start sending PING messages
 	go func() {
@@ -181,6 +182,9 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 	}
 	clients = append(clients, &c)
 	clients_mux.Unlock()
+
+	log.Printf("Connection for %d from %s\n", c.Id, r.RemoteAddr)
+	log.Printf("There are %d connections\n", len(clients))
 
 	var msgtype int
 	var p []byte
@@ -238,15 +242,17 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 
 	// remove the client from the list of clients
 	// first find it
-	clients_mux.Lock()
 	var ci int
+	var found bool = false
+	clients_mux.Lock()
 	for ci = 0; ci < len(clients); ci++ {
 		if clients[ci] == &c {
+			found = true
 			break
 		}
 	}
 
-	if ci == len(clients) {
+	if !found {
 		log.Fatal("Could not remove client from the slice!\n")
 	}
 
@@ -255,7 +261,7 @@ func wsConnection(w http.ResponseWriter, r *http.Request) {
 
 	close(c.Out) // this triggers the end for the out routine
 
-	log.Printf("closed connection from %s\n", r.RemoteAddr)
+	log.Printf("closed connection for player %d from %s\n", c.Id, r.RemoteAddr)
 
 	// TODO send out a player remove message to everyone
 	msgin <- msgctrl{

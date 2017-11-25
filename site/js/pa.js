@@ -15,6 +15,7 @@ const move_amount = 0.50;
 
 const max_player_w = 12;
 const max_player_h = 12;
+const pmap_size = max_player_w * max_player_h * aniframes;
 const max_player_w2 = Math.floor(max_player_w / 2);
 const max_player_h2 = Math.floor(max_player_h / 2);
 
@@ -260,6 +261,17 @@ function PixGame(canvas) {
 	this.other_players = {};
 	this.player = new PixPlayer(0.0, 0.0);
 	this.player.known_location = true;
+
+	// check for a saved player
+	let pmapstr = window.localStorage.getItem("player_map");
+	if (pmapstr != null) {
+		let pmap = JSON.parse(pmapstr);
+		for (let i=0; i<pmap_size; i++) {
+			this.player.map.map[i] = pmap[i];
+		}
+		// send this to the server
+		comms_player_map(this.player.map.map);
+	}
 }
 
 PixGame.prototype.draw = function() {
@@ -283,15 +295,6 @@ PixGame.prototype.draw = function() {
 	// draw the map
 	this.map.draw(this.ctx, -left_off, -top_off, left_edge, top_edge, this.can_w, this.can_h, this.frame, true, (this.selected_collision && !this.selected_player));
 	
-	// draw selected pixel cursor
-	if (PIX_ACTIVE & this.selected_color) {
-		this.ctx.fillStyle = PIX_COLOR(this.selected_color);
-		let penoff = Math.floor(this.pensz/2);
-		let can_cord = this.px2can(this.selected_x - penoff, this.selected_y - penoff);
-		this.ctx.fillRect(can_cord.x, can_cord.y, pixsz * this.pensz, pixsz * this.pensz);
-	}
-	
-
 	// if we are drawing the player for editing, draw the surrounding area a see through black
 	if (this.selected_player) {
 		this.ctx.fillStyle = "rgba(0,0,0,0.4)";
@@ -317,6 +320,16 @@ PixGame.prototype.draw = function() {
 	this.player.draw(this.ctx, this.can_w2 * pixsz, this.can_h2 * pixsz, this.frame, (this.selected_collision && this.selected_player));
 
 	// draw map top pixels
+	//TODO
+
+	// draw selected pixel cursor
+	if (PIX_ACTIVE & this.selected_color) {
+		this.ctx.fillStyle = PIX_COLOR(this.selected_color);
+		let penoff = Math.floor(this.pensz/2);
+		let can_cord = this.px2can(this.selected_x - penoff, this.selected_y - penoff);
+		this.ctx.fillRect(can_cord.x, can_cord.y, pixsz * this.pensz, pixsz * this.pensz);
+	}
+	
 }
 
 PixGame.prototype.anitick = function() {
@@ -358,6 +371,8 @@ PixGame.prototype.colorSel = function(erase=false) {
 				}
 			}
 		}
+		// save player to local storage
+		window.localStorage.setItem("player_map", JSON.stringify(this.player.map.map));
 	} else {
 		for (dy=0; dy<this.pensz; dy++) {
 			for (dx=0; dx<this.pensz; dx++) {
@@ -475,7 +490,7 @@ PixGame.prototype.other_player_set = function(id, x, y, color, frames, fullwrite
 }
 
 PixGame.prototype.other_player_setCol = function(id, x, y, erase, frames) {
-	// first check if the other player exists, if not create him
+	// first check if the other player exists, if not create them
 	if (this.other_players[id] === undefined) {
 		this.other_players[id] = new PixPlayer(0.0, 0.0);
 	}
@@ -484,7 +499,7 @@ PixGame.prototype.other_player_setCol = function(id, x, y, erase, frames) {
 }
 
 PixGame.prototype.other_player_move = function(id, px, py) {
-	// first check if the other player exists, if not create him
+	// first check if the other player exists, if not create them
 	if (this.other_players[id] === undefined) {
 		this.other_players[id] = new PixPlayer(0.0, 0.0);
 	}
@@ -493,4 +508,15 @@ PixGame.prototype.other_player_move = function(id, px, py) {
 	this.other_players[id].y = py;
 
 	this.other_players[id].known_location = true;
+}
+
+PixGame.prototype.other_player_setMap = function(id, m) {
+	// first check if the other player exists, if not create them
+	if (this.other_players[id] === undefined) {
+		this.other_players[id] = new PixPlayer(0.0, 0.0);
+	}
+
+	for (let i=0; i<pmap_size; i++) {
+		this.other_players[id].map.map[i] = m[i];
+	}
 }

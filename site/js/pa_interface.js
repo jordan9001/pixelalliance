@@ -12,6 +12,8 @@ const dkc = 68;
 const rikc = 39;
 const akc = 65;
 const lekc = 37;
+const qkc = 81;
+const ekc = 69;
 
 // important elements
 let rcontrol = document.getElementById("rightctr"); 
@@ -24,12 +26,29 @@ let rpicker = document.getElementById("rinp");
 let gpicker = document.getElementById("ginp");
 let bpicker = document.getElementById("binp");
 let brushszinp = document.getElementById("brushsz");
-let col_label = document.getElementById("collision_label");
+let eplayer = document.getElementById("edit_player");
+let ecol = document.getElementById("edit_collision");
+let ibox = document.getElementById('infobox');
+
+function showinfo() {
+    ibox.style.display = "block";
+}
+function hideinfo() {
+    ibox.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == ibox) {
+        ibox.style.display = "none";
+    }
+}
 
 // important state vars
 let dirty_draw = false;
 let mouse_down = false;
 let right_down = false;
+let edown = false;
 let wdown = false;
 let sdown = false;
 let ddown = false;
@@ -81,14 +100,19 @@ function toggle_rightctr() {
 function toggle_editcol() {
 	game.selected_collision = !game.selected_collision;
 	if (game.selected_collision) {
-		col_label.innerText = "Editing Collision";	
+		ecol.innerText = "Editing Collision";
 	} else {
-		col_label.innerText = "";	
+		ecol.innerText = "Edit Collision"
 	}
 }
 
 function toggle_editplayer() {
 	game.selected_player = !game.selected_player;
+	if (game.selected_player) {
+		eplayer.innerText = "Editing Player";
+	} else {
+		eplayer.innerText = "Edit Player";
+	}
 }
 
 function toggle_frame(framebtn) {
@@ -132,6 +156,18 @@ function change_frame(val) {
 function change_brushsz(val) {
 	game.pensz = val;
 	dirty_draw = true;
+}
+
+function do_eyedrop() {
+	// do eyedropper
+	let c = game.getColorSel();
+	let r = (c & 0xf00) >> 4;
+	let g = (c & 0xf0);
+	let b = (c & 0xf) << 4;
+	r = r | (r >> 4);
+	g = g | (g >> 4);
+	b = b | (b >> 4);
+	colorpicker.setRgb({r:r, g:g, b:b});
 }
 
 let frame_timer = 0;
@@ -195,7 +231,7 @@ canvas.addEventListener('mousemove', function(evt) {
 	let cany = evt.clientY - rect.top;
 
 	if (game.setMouse(game.can2px(canx, cany))) {
-		if (right_down) {
+		if (right_down || edown) {
 			game.colorSel(true);
 		} else if (mouse_down) {
 			game.colorSel();
@@ -215,15 +251,7 @@ canvas.addEventListener('mousedown', function(evt) {
 		game.colorSel(true)
 	} else if (evt.button == 1) {
 		// middle mouse
-		// do eyedropper
-		let c = game.getColorSel();
-		let r = (c & 0xf00) >> 4;
-		let g = (c & 0xf0);
-		let b = (c & 0xf) << 4;
-		r = r | (r >> 4);
-		g = g | (g >> 4);
-		b = b | (b >> 4);
-		colorpicker.setRgb({r:r, g:g, b:b});
+		do_eyedrop();
 	}
 	dirty_draw = true;
 }, false);
@@ -278,6 +306,12 @@ document.addEventListener('keydown', function(evt) {
 		adown = true;
 		movekey = true;
 		break;
+	case qkc:
+		do_eyedrop();
+		break;
+	case ekc:
+		edown = true;
+		break;
 	}
 
 	if (movekey) {
@@ -308,6 +342,9 @@ document.addEventListener('keyup', function(evt) {
 	case lekc:
 		adown = false;
 		movekey = true;
+		break;
+	case ekc:
+		edown = true;
 		break;
 	}
 	

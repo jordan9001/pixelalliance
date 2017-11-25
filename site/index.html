@@ -51,21 +51,37 @@
 						<div class="col f6">
 							<label for="brushsz">Brush Size</label>
 						</div>
-					</div>
-					<div class="row">
-						<div class="col f6">
-							<button id="edit_player" onclick="toggle_editplayer(this)" class="_active _width100">Player</button>
+						<div class="col f12 _noPadding">
+							<button id="edit_player" onclick="toggle_editplayer(this)" class="_active _width100">Edit Player</button>
 						</div>
-					</div>
-					<div class="row">
-						<div class="col f6">
-							<button id="edit_collision" onclick="toggle_editcol(this)" class="_active _width100">Solid</button>
+						<div class="col f12 _noPadding">
+							<button id="edit_collision" onclick="toggle_editcol(this)" class="_active _width100">Edit Collision</button>
 						</div>
-						<div class="col f6">
-							<p id="collision_label"></p>
+						<div class="col f12 _alignCenter">
+							<button id="show_info" onclick="showinfo()" class="_round _active _dark">?</button>
 						</div>
 					</div>
 				</div>
+			</div>
+		</div>
+		<div id="infobox" class="modalbox-modal">
+			<div class="modalbox-modal-content">
+				<span class="-close" id="close_info" onclick="hideinfo()">✖</span>
+				<div class="_alignCenter">
+					<p>Welcome to Pixel Alliance! Make pixel art, or explore other's creations!</p>
+					<p>To animate, select which frames you want to paint to with the numbered buttons.</p>
+					<p>To make your art interactive, click the 'Edit Collision' button to indicate where your piece collides with players, then create a player with 'Edit Player' and be sure to add collidable places in the player</p>
+				</div>
+				<dl>
+					<dt>Movement</dt>
+					<dd>Arrow Keys/WASD</dd>
+					<dt>Paint</dt>
+					<dd>Left Click</dt>
+					<dt>Erase</dt>
+					<dd>Right Click / E</dd>
+					<dt>Select Color at Cursor</dt>
+					<dd>Middle Click / Q</dd>
+				</dl>
 			</div>
 		</div>
 		<script src="js/pa_comms.js"></script>
