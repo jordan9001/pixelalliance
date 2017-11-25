@@ -260,22 +260,6 @@ function PixGame(canvas) {
 	this.other_players = {};
 	this.player = new PixPlayer(0.0, 0.0);
 	this.player.known_location = true;
-
-	// check if we have a player already saved in storage
-	let saved_pmap = window.localStorage.getItem("pmap");
-	if (saved_pmap != null) {
-		this.player.map = saved_pmap;
-		// send it out to the server
-		let i=0;
-		for (let f=0; f<aniframes; f++) {
-			for (let y=0; y<max_player_h; y++) {
-				for (let x=0; x<max_player_w; x++) {
-					comms_player_draw(x, y, [f], saved_pmap[i]);
-					i++;
-				}
-			}
-		}
-	}
 }
 
 PixGame.prototype.draw = function() {
@@ -374,9 +358,6 @@ PixGame.prototype.colorSel = function(erase=false) {
 				}
 			}
 		}
-		
-		// save to localstorage
-		window.localStorage.setItem('pmap', this.player.map);
 	} else {
 		for (dy=0; dy<this.pensz; dy++) {
 			for (dx=0; dx<this.pensz; dx++) {

@@ -42,7 +42,7 @@ function comms_init(game) {
 	ws.onopen = function(opn_evt) {
 		comms_ready = true;
 		while (comms_queue.length > 0) {
-			msg = q.shift();
+			msg = comms_queue.shift();
 			ws.send(msg);
 		}
 	};
@@ -63,7 +63,7 @@ function comms_ws_send(str) {
 	if (comms_ready) {
 		ws.send(str);
 	} else {
-		comms.queue.push(str);
+		comms_queue.push(str);
 	}
 	return true;
 }
@@ -88,7 +88,8 @@ function comms_map_col_draw(x, y, f, c) {
 function comms_player_draw(x, y, f, c) {
 	// player map cell x, y, frame, direction, and color
 	// frame and direction are arrays of numbers
-	return comms_ws_send(JSON.stringify({t: MSG_PLAYER_PAINT, x: x, y: y, f: f, c: c}));
+	msg = {t: MSG_PLAYER_PAINT, x: x, y: y, f: f, c: c};
+	return comms_ws_send(JSON.stringify(msg));
 }
 
 function comms_player_col_draw(x, y, f, c) {
