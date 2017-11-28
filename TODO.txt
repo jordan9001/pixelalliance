@@ -1,8 +1,16 @@
 Order of todo:
-	localStorage for player map
+	Client Optimizations:
+		Only send if cell changed
+		have loading message until current block is loaded, don't allow drawing until it is loaded
+
+	Server Optimizations:
+		Only send if cell changed
+		send with as big of frame groups as possible
+		Add Block message type and send it for players entering an adjacent block
+		Don't send updates outside of current player block
+
 
 Other:
-	look into connection timeout more
 	top
 	locked
 	Good scrolling
